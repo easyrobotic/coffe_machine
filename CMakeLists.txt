@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 ## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+# find_package(Boost REQUIRED COMPONENTS system xml)
 
 
 ## Uncomment this if the package has a setup.py. This macro ensures
@@ -135,7 +135,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/coffe_machine_node.cpp)
-add_executable(behavior_tree_node src/behavior_tree_node.cpp)
+add_executable(behavior_tree_node src/behavior_tree_node.cpp src/coffe_machine/coffe_machine.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -151,7 +151,7 @@ add_executable(behavior_tree_node src/behavior_tree_node.cpp)
 # target_link_libraries(${PROJECT_NAME}_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries( coffe_machine
+target_link_libraries( behavior_tree_node
   ${catkin_LIBRARIES}
 )
 

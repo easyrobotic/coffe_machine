@@ -6,37 +6,61 @@ using namespace BT;
 
 static const char* xml_text;
 
+//std::string path = "./home/julia/tfm/src/coffe_machine/xml/coffe_machine.xml";
+std::string path = "./../xml/coffe_machine_v2.xml";
+//std::string path = "./coffe_machine_v2.xml";
+
+Blackboard::Ptr blackboard=Blackboard::create();
+
 
 int main()
 {
     // We use the BehaviorTreeFactory to register our custom nodes
     BehaviorTreeFactory factory;
 
-    /*std::string input_xml;
-    *std::string line;
-    std::ifstream in("../xml/coffe_machine.xml");
-    xml_text = in;*/
-
-    /* There are two ways to register nodes:
-    *    - statically, i.e. registering all the nodes one by one.
-    *    - dynamically, loading the TreeNodes from a shared library (plugin).
-    * */
-
-//#ifdef MANUAL_STATIC_LINKING
-    // Note: the name used to register should be the same used in the XML.
-    // Note that the same operations could be done using DummyNodes::RegisterNodes(factory)
-
     using namespace CoffeMachineNS;
 
-    // The recommended way to create a Node is through inheritance.
-    // Even if it requires more boilerplate, it allows you to use more functionalities
-    // like ports (we will discuss this in future tutorials).
-    //factory.registerNodeType<ApproachObject>("ApproachObject");
 
     // Registering a SimpleActionNode using a function pointer.
     // you may also use C++11 lambdas instead of std::bind
-    factory.registerSimpleCondition("IsMachineOpen", std::bind(IsMachineOpen));
+    static CoffeMachine coffe_machine;
+    static WaterTank water_tank;
+    static MarroTank marro_tank;
+    static Milk milk;
+    static Sugar sugar;
 
+    factory.registerSimpleCondition("IsMachineOpen", std::bind(IsMachineOpen));
+    factory.registerSimpleCondition("IsCleanCupReady", std::bind(IsCleanCupReady));
+    factory.registerSimpleAction("SwitchOnCoffeMachine", std::bind(&CoffeMachine::Open, &coffe_machine));
+    factory.registerSimpleCondition("IsCleanProcessFinished", std::bind(IsCleanProcessFinished));
+    factory.registerSimpleCondition("IsThereEnoughWater", std::bind(IsThereEnoughWater));
+    factory.registerSimpleCondition("IsWaterTankRemoved", std::bind(IsWaterTankRemoved));
+    factory.registerSimpleCondition("IsWaterTankFull", std::bind(IsWaterTankFull));   
+    factory.registerSimpleAction("FillWaterTank", std::bind(&WaterTank::Fill, &water_tank));
+    factory.registerSimpleCondition("IsWaterTankPlacedInCoffeMachine", std::bind(IsWaterTankPlacedInCoffeMachine));       
+    factory.registerSimpleCondition("IsMarroTankFull", std::bind(IsMarroTankFull));     
+    factory.registerSimpleCondition("IsMarroTankRemoved", std::bind(IsMarroTankRemoved));        
+    factory.registerSimpleCondition("IsMarroTankEmpty", std::bind(IsMarroTankEmpty));      
+    factory.registerSimpleAction("EmptyMarroTank", std::bind(&MarroTank::Empty, &marro_tank));   
+    factory.registerSimpleCondition("IsMarroTankPlacedInCoffeMachine", std::bind(IsMarroTankPlacedInCoffeMachine));     
+    factory.registerSimpleCondition("IsCoffeCupReady", std::bind(IsCoffeCupReady));     
+    factory.registerSimpleAction("PlaceCoffeCup", std::bind(&CoffeMachine::PlaceCoffeCup, &coffe_machine));  
+    factory.registerSimpleCondition("IsDesiredCoffeSelected", std::bind(IsDesiredCoffeSelected));      
+    factory.registerSimpleAction("PressDesiredCoffe", std::bind(&CoffeMachine::PressDesiredCoffe, &coffe_machine)); 
+    factory.registerSimpleCondition("IsCoffeFinished", std::bind(IsCoffeFinished));     
+    factory.registerSimpleCondition("HasCupOfCoffeBeenRemoved", std::bind(HasCupOfCoffeBeenRemoved));     
+    factory.registerSimpleCondition("HasHumanAddedCleaningCup", std::bind(HasHumanAddedCleaningCup));    
+    factory.registerSimpleAction("PlaceCleanCup", std::bind(&CoffeMachine::PlaceCleanCup, &coffe_machine)); 
+    factory.registerSimpleAction("SwitchOffCoffeMachine", std::bind(&CoffeMachine::Close, &coffe_machine)); 
+    factory.registerSimpleCondition("HasHumanAddedMilk", std::bind(HasHumanAddedMilk));        
+    factory.registerSimpleCondition("IsMilkDesired", std::bind(IsMilkDesired));    
+    factory.registerSimpleCondition("IsSugarDesired", std::bind(IsSugarDesired));   
+    factory.registerSimpleAction("AddMilktoCoffe", std::bind(&Milk::Add, &milk)); 
+    factory.registerSimpleAction("AddSugarToCoffe", std::bind(&Sugar::Add, &sugar));  
+
+    std::cout << "creating tree from file" << std::endl;
+    auto tree = factory.createTreeFromFile(path);
+    std::cout << "tree from file is created" << std::endl;
     //You can also create SimpleActionNodes using methods of a class
     /*GripperInterface gripper;
     factory.registerSimpleAction("OpenGripper", std::bind(&GripperInterface::open, &gripper));
@@ -59,7 +83,7 @@ int main()
     // The tick is propagated to the children based on the logic of the tree.
     // In this case, the entire sequence is executed, because all the children
     // of the Sequence return SUCCESS.
-    //tree.tickRoot();
+    tree.tickRoot();
 
     return 0;
 }

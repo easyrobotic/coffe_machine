@@ -64,7 +64,7 @@
                 <Condition ID="IsCoffeFinished"/>
             </Timeout>
             <Timeout msec="5000">
-                <Condition ID="HasCupOfCoffeBeenRemoved"/>
+                <Condition ID="HasCupOffCoffeBeenRemoved"/>
             </Timeout>
             <Timeout msec="5000">
                 <Fallback>
@@ -134,7 +134,7 @@
         </SubTree>
         <Action ID="EmptyMarroTank"/>
         <Action ID="FillWaterTank"/>
-        <Condition ID="HasCupOfCoffeBeenRemoved"/>
+        <Condition ID="HasCupOffCoffeBeenRemoved"/>
         <Condition ID="HasHumanAddedCleaningCup"/>
         <Condition ID="HasHumanAddedMilk"/>
         <Condition ID="IsCleanCupReady"/>
