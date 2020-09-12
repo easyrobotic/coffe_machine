@@ -7,7 +7,7 @@ using namespace BT;
 static const char* xml_text;
 
 //std::string path = "./home/julia/tfm/src/coffe_machine/xml/coffe_machine.xml";
-std::string path = "./../xml/coffe_machine_v2.xml";
+std::string path = "./../xml/coffe_machine.xml";
 //std::string path = "./coffe_machine_v2.xml";
 
 Blackboard::Ptr blackboard=Blackboard::create();
@@ -55,7 +55,7 @@ int main()
     factory.registerSimpleCondition("HasHumanAddedMilk", std::bind(HasHumanAddedMilk));        
     factory.registerSimpleCondition("IsMilkDesired", std::bind(IsMilkDesired));    
     factory.registerSimpleCondition("IsSugarDesired", std::bind(IsSugarDesired));   
-    factory.registerSimpleAction("AddMilktoCoffe", std::bind(&Milk::Add, &milk)); 
+    factory.registerSimpleAction("AddMilkToCoffe", std::bind(&Milk::Add, &milk)); 
     factory.registerSimpleAction("AddSugarToCoffe", std::bind(&Sugar::Add, &sugar));  
 
     std::cout << "creating tree from file" << std::endl;

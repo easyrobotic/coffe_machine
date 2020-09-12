@@ -132,6 +132,14 @@ class Sugar
         bool _added;
 };
 
+class Global
+{
+    public:
+        BT::NodeStatus AskForStatus(std::string NodeName);
+        std::string texto;
+
+};
+
 
 
 /*class CleanProcess

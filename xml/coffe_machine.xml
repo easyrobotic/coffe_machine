@@ -16,9 +16,12 @@
                         </Timeout>
                         <Action ID="FillWaterTank"/>
                     </Fallback>
-                    <RetryUntilSuccesful num_attempts="100">
+                    <Timeout msec="5000">
                         <Condition ID="IsWaterTankPlacedInCoffeMachine"/>
-                    </RetryUntilSuccesful>
+                    </Timeout>
+                    <Timeout msec="5000">
+                        <Condition ID="IsCleanProcessFinished"/>
+                    </Timeout>
                 </Sequence>
             </Fallback>
             <Fallback>
@@ -38,6 +41,9 @@
                     <RetryUntilSuccesful num_attempts="100">
                         <Condition ID="IsMarroTankPlacedInCoffeMachine"/>
                     </RetryUntilSuccesful>
+                    <Timeout msec="5000">
+                        <Condition ID="IsCleanProcessFinished"/>
+                    </Timeout>
                 </Sequence>
             </Fallback>
         </Fallback>
@@ -83,7 +89,7 @@
                             <Inverter>
                                 <Condition ID="IsMilkDesired"/>
                             </Inverter>
-                            <Action ID="AddMilktoCoffe"/>
+                            <Action ID="AddMilkToCoffe"/>
                         </Fallback>
                         <Fallback>
                             <Inverter>
@@ -124,7 +130,7 @@
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
-        <Action ID="AddMilktoCoffe"/>
+        <Action ID="AddMilkToCoffe"/>
         <Action ID="AddSugarToCoffe"/>
         <SubTree ID="AutoClean">
             <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>

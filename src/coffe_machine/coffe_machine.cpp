@@ -3,73 +3,99 @@
 
 namespace CoffeMachineNS
 {
+
+    //Global Variables
+    static Global global;
+    BT::NodeStatus status;
+
+    //Global Functions
+
+
+    BT::NodeStatus Global::AskForStatus(std::string NodeName)
+    {
+
+        std::cout << "Please enter an " << NodeName << " NodeStatus value: S, R or F" << std::endl;
+        std::cin >> texto;
+
+        if (texto.compare("S")==0) {
+            std::cout << "The " << NodeName << " NodeStatus is Success" << std::endl;
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        else if (texto.compare("R")==0) {
+            std::cout << "The " << NodeName <<  " NodeStatus is Running" << std::endl;
+            return BT::NodeStatus::RUNNING;
+
+
+        }
+        else{
+            std::cout << "The " << NodeName << " NodeStatus is Failure" << std::endl;
+            return BT::NodeStatus::FAILURE;
+
+
+        }
+    }
+
+
+    //OpenCoffeMachine Subtree
+
+
     BT::NodeStatus IsMachineOpen()
     {
-        std::cout << "[ IsMachineOpen: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsMachineOpen");
+        return status;
+        //return BT::NodeStatus::SUCCESS;
     }
 
     BT::NodeStatus IsCleanCupReady()
     {
-        std::cout << "[ IsCleanCupReady: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsCleanCupReady");
+        return status;
+        //return BT::NodeStatus::SUCCESS;
     }
 
 
     BT::NodeStatus CoffeMachine::Open()
     {
         _opened = true;
-        std::cout << "CoffeMachine::open" << std::endl;
-        std::string texto;
-        std::cin >> texto;
-        if (texto.compare("S")) {
-            //0: if they are equal 
-            return BT::NodeStatus::SUCCESS;
-            //!0: same difference
-        }
-
-        else if (texto.compare("R")) {
-            //0: if they are equal 
-            return BT::NodeStatus::RUNNING;
-            //!0: same difference
-
-
-        }
-        else{
-            //0: if they are equal 
-            return BT::NodeStatus::FAILURE;
-            //!0: same difference
-
-
-        }
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("SwitchOnCoffeMachine");
+        return status;
+        //return BT::NodeStatus::SUCCESS;
     }
+
+
+    //AutoClean Subtree
 
      BT::NodeStatus IsCleanProcessFinished()
     {
-        std::cout << "[ IsCleanProcessFinished: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsCleanProcessFinished");
+        return status;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
        BT::NodeStatus IsThereEnoughWater()
     {
-        std::cout << "[ IsThereEnoughWater: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsThereEnoughWater");
+        return status;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
         BT::NodeStatus IsWaterTankRemoved()
     {
-        std::cout << "[ IsWaterTankRemoved: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsWaterTankRemoved");
+        return status;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
     BT::NodeStatus IsWaterTankFull()
     {
-        std::cout << "[ IsWaterTankFull: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsWaterTankFull");
+        return status;
+        //std::cout << "[ IsWaterTankFull: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
@@ -77,145 +103,196 @@ namespace CoffeMachineNS
     BT::NodeStatus WaterTank::Fill()
     {
         _filled = true;
-        std::cout << "[ FillingWaterTank: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("FillWaterTank");
+        return status;
+        //std::cout << "[ FillingWaterTank: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
 
        BT::NodeStatus IsWaterTankPlacedInCoffeMachine()
     {
-        std::cout << "[ IsThereEnoughWater: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsWaterTankPlacedInCoffeMachine");
+        return status;
+        //std::cout << "[ IsThereEnoughWater: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
+
        BT::NodeStatus IsMarroTankFull()
     {
-        std::cout << "[ IsMarroTankFull: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsMarroTankFull");
+        return status;
+        //std::cout << "[ IsMarroTankFull: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
        BT::NodeStatus IsMarroTankRemoved()
     {
-        std::cout << "[ IsMarroTankRemoved: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsMarroTankRemoved");
+        return status;
+        //std::cout << "[ IsMarroTankRemoved: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
         BT::NodeStatus IsMarroTankEmpty()
     {
-        std::cout << "[ IsMarroTankEmpty: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsMarroTankEmpty");
+        return status;
+        //std::cout << "[ IsMarroTankEmpty: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
        BT::NodeStatus MarroTank::Empty()
     {
         _empty = true;
-        std::cout << "[ EmptyMarroTank: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("EmptyMarroTank");
+        return status;
+        //std::cout << "[ EmptyMarroTank: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
         BT::NodeStatus IsMarroTankPlacedInCoffeMachine()
     {
-        std::cout << "[ IsMarroTankPlacedInCoffeMachine: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+
+        status = global.AskForStatus("IsMarroTankPlacedInCoffeMachine");
+        return status;
+        //std::cout << "[ IsMarroTankPlacedInCoffeMachine: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
+    //PutCoffeCup Subtree
+
+
         BT::NodeStatus IsCoffeCupReady()
     {
-        std::cout << "[ IsCoffeCupReady: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+
+        status = global.AskForStatus("IsCoffeCupReady");
+        return status;
+        //std::cout << "[ IsCoffeCupReady: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
         BT::NodeStatus CoffeMachine::PlaceCoffeCup()
     {
         _coffecuplaced = true;
-        std::cout << "[ CoffeCupPlaced: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("PlaceCoffeCup");
+        return status;
+        //std::cout << "[ CoffeCupPlaced: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
+
+    //CoffeType Subtree
+
 
         BT::NodeStatus IsDesiredCoffeSelected()
     {
-        std::cout << "[ IsDesiredCoffeSelected: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsDesiredCoffeSelected");
+        return status;
+        //std::cout << "[ IsDesiredCoffeSelected: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
         BT::NodeStatus CoffeMachine::PressDesiredCoffe()
     {
         _desiredcoffepressed = true;
-        std::cout << "[ PressDesiredCoffe: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("PressDesiredCoffe");
+        return status;
+        //std::cout << "[ PressDesiredCoffe: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
         BT::NodeStatus IsCoffeFinished()
     {
-        std::cout << "[ IsCoffeFinished: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsCoffeFinished");
+        return status;
+        //std::cout << "[ IsCoffeFinished: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
        BT::NodeStatus HasCupOfCoffeBeenRemoved()
     {
-        std::cout << "[ HasCupOfCoffeBeenRemoved: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("HasCupOfCoffeBeenRemoved");
+        return status;
+        //std::cout << "[ HasCupOfCoffeBeenRemoved: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
     
 
        BT::NodeStatus HasHumanAddedCleaningCup()
     {
-        std::cout << "[ HasHumanAddedCleaningCup: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("HasHumanAddedCleaningCup");
+        return status;        
+        //std::cout << "[ HasHumanAddedCleaningCup: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
 
     }
 
         BT::NodeStatus CoffeMachine::PlaceCleanCup()
     {
         _cleancuplaced = true;
-        std::cout << "[ PlaceCleanCup: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("PlaceCleanCup");
+        return status;  
+        //std::cout << "[ PlaceCleanCup: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
     BT::NodeStatus CoffeMachine::Close()
     {
         _opened = false;
-        std::cout << "[ SwitchOffCoffeMachine: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("SwitchOffCoffeMachine");
+        return status; 
+        //std::cout << "[ SwitchOffCoffeMachine: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
         BT::NodeStatus HasHumanAddedMilk()
     {
-        std::cout << "[ HasHumanAddedMilk: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("HasHumanAddedMilk");
+        return status; 
+        //std::cout << "[ HasHumanAddedMilk: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
         BT::NodeStatus IsMilkDesired()
     {
-        std::cout << "[ IsMilkDesired: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsMilkDesired");
+        return status; 
+        //std::cout << "[ IsMilkDesired: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
     
         BT::NodeStatus IsSugarDesired()
     {
-        std::cout << "[ IsSugarDesired: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("IsSugarDesired");
+        return status;         
+        //std::cout << "[ IsSugarDesired: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
     BT::NodeStatus Milk::Add()
     {
         _added = false;
-        std::cout << "[ AddMilktoCoffe: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("AddMilktoCoffe");
+        return status;  
+        //std::cout << "[ AddMilktoCoffe: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
     
     BT::NodeStatus Sugar::Add()
     {
         _added = false;
-        std::cout << "[ AddSugartoCoffe: OK ]" << std::endl;
-        return BT::NodeStatus::SUCCESS;
+        status = global.AskForStatus("AddSugarToCoffe");
+        return status;  
+        //std::cout << "[ AddSugartoCoffe: OK ]" << std::endl;
+        //return BT::NodeStatus::SUCCESS;
     }
 
     
