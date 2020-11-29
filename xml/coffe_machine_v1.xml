@@ -7,11 +7,11 @@
             <Fallback>
                 <Condition ID="IsThereEnoughWater"/>
                 <Sequence>
-                    <Timeout msec="300000">
+                    <Timeout msec="5000">
                         <Condition ID="IsWaterTankRemoved"/>
                     </Timeout>
                     <Fallback>
-                        <Timeout msec="300000">
+                        <Timeout msec="5000">
                             <Condition ID="IsWaterTankFull"/>
                         </Timeout>
                         <Action ID="FillWaterTank"/>
@@ -82,23 +82,26 @@
                 </Fallback>
             </Timeout>
             <Timeout msec="5000">
-                <Fallback name="arallel">
-                    <Condition ID="HasHumanAddedMilk"/>
-                    <Sequence>
+                <Sequence>
+                    <Fallback>
+                        <Condition ID="HasHumanAddedMilk"/>
                         <Fallback>
                             <Inverter>
                                 <Condition ID="IsMilkDesired"/>
                             </Inverter>
                             <Action ID="AddMilkToCoffe"/>
                         </Fallback>
+                    </Fallback>
+                    <Fallback>
+                        <Condition ID="HasHumanAddedSugar"/>
                         <Fallback>
                             <Inverter>
                                 <Condition ID="IsSugarDesired"/>
                             </Inverter>
                             <Action ID="AddSugarToCoffe"/>
                         </Fallback>
-                    </Sequence>
-                </Fallback>
+                    </Fallback>
+                </Sequence>
             </Timeout>
         </Sequence>
     </BehaviorTree>
@@ -143,6 +146,7 @@
         <Condition ID="HasCupOfCoffeBeenRemoved"/>
         <Condition ID="HasHumanAddedCleaningCup"/>
         <Condition ID="HasHumanAddedMilk"/>
+        <Condition ID="HasHumanAddedSugar"/>
         <Condition ID="IsCleanCupReady"/>
         <Condition ID="IsCleanProcessFinished"/>
         <Condition ID="IsCoffeCupReady"/>

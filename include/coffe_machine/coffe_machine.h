@@ -2,12 +2,20 @@
 #include "behaviortree_cpp_v3/behavior_tree.h"
 #include "behaviortree_cpp_v3/bt_factory.h"
 #include <iostream>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <darknet_ros_msgs/BoundingBoxes.h>
+#include <darknet_ros_msgs/BoundingBox.h>
+#include <openpose_ros_msgs/OpenPoseHumanList.h>
+#include <openpose_ros_msgs/PointWithProb.h>
+
+
 namespace CoffeMachineNS{
 
 //OpenCoffeMachine Subtree
 
 BT::NodeStatus IsMachineOpen(); //
-BT::NodeStatus IsCleanCupReady(); //
+//BT::NodeStatus IsCleanCupReady(); //
 
 //AutoClean Subtree
 BT::NodeStatus IsCleanProcessFinished(); //
@@ -41,25 +49,51 @@ BT::NodeStatus IsSugarDesired(); //
 //BT::NodeStatus IsCoffeMachineSwitchedOff();
 
 
+class CoffeMachineROSNode{
+    public:
+        CoffeMachineROSNode(ros::NodeHandle *nh);
+        sensor_msgs::Image cm_raw_image;
+        darknet_ros_msgs::BoundingBoxes cm_bounding_boxes;
+        openpose_ros_msgs::OpenPoseHumanList cm_openpose_hl;
+
+        BT::NodeStatus IsCleanCupReady();
+        BT::NodeStatus IsWaterTankRemoved();
+
+    private:
+        //ros::Publisher pub;
+        ros::NodeHandle nh;
+        //callback_functions
+        void raw_image_callback(const sensor_msgs::Image& msg);
+        void bounding_boxes_callback(const darknet_ros_msgs::BoundingBoxes& msg);
+        void openpose_hl_callback(const openpose_ros_msgs::OpenPoseHumanList& msg);
+
+        //subscriber and publisher
+        ros::Subscriber raw_image_sub;
+        ros::Publisher pub_cm_raw_image;
+        ros::Subscriber bounding_boxes_sub;
+        ros::Subscriber openpose_sub;
+
+        // member methods as well:
+        void initializeSubscribers();        
+        void initializePublishers();
+
+        //internal functions
+        void pub_cm_raw_image_fun();
+        openpose_ros_msgs::PointWithProb find_joint(const openpose_ros_msgs::OpenPoseHumanList& msg, int num_joint);
+        darknet_ros_msgs::BoundingBox find_class(const darknet_ros_msgs::BoundingBoxes& msg, std::string dk_class);
+
+   
 
 
-
-
-
-
-
-
-
-
-
-
+            //ros::ServiceServer reset_service;
+};
 
 class CoffeMachine
 {
     public:
         CoffeMachine() : _opened(false)
         {
-
+            //ros::Publisher chatter_pub = n.advertise<std_msgs::String>("chatter", 1000);
         }
 
         BT::NodeStatus Open();

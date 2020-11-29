@@ -1,19 +1,20 @@
 #include "coffe_machine/coffe_machine.h"
 #include <iostream>
 #include <fstream>
+#include <chrono>
 
 using namespace BT;
 
 static const char* xml_text;
 
-//std::string path = "./home/julia/tfm/src/coffe_machine/xml/coffe_machine.xml";
-std::string path = "./../xml/coffe_machine.xml";
+std::string path = "/home/julia/tfm/src/coffe_machine/xml/coffe_machine.xml";
+//std::string path = "./../xml/coffe_machine.xml";
 //std::string path = "./coffe_machine_v2.xml";
 
 Blackboard::Ptr blackboard=Blackboard::create();
 
 
-int main()
+int main(int argc, char **argv)
 {
     // We use the BehaviorTreeFactory to register our custom nodes
     BehaviorTreeFactory factory;
@@ -29,12 +30,24 @@ int main()
     static Milk milk;
     static Sugar sugar;
 
-    factory.registerSimpleCondition("IsMachineOpen", std::bind(IsMachineOpen));
-    factory.registerSimpleCondition("IsCleanCupReady", std::bind(IsCleanCupReady));
-    factory.registerSimpleAction("SwitchOnCoffeMachine", std::bind(&CoffeMachine::Open, &coffe_machine));
-    factory.registerSimpleCondition("IsCleanProcessFinished", std::bind(IsCleanProcessFinished));
-    factory.registerSimpleCondition("IsThereEnoughWater", std::bind(IsThereEnoughWater));
-    factory.registerSimpleCondition("IsWaterTankRemoved", std::bind(IsWaterTankRemoved));
+    //ROS Node
+
+    ros::init(argc, argv, "coffe_machine_main_node");
+    ros::NodeHandle nh;
+    //ros::Rate loop_rate(10);
+    CoffeMachineROSNode coffe_machine_ros_node = CoffeMachineROSNode(&nh);
+
+    factory.registerSimpleCondition("IsMachineOpen", std::bind(IsMachineOpen)); //User command
+    factory.registerSimpleCondition("IsCleanCupReady", std::bind(&CoffeMachineROSNode::IsCleanCupReady, &coffe_machine_ros_node)); //done
+
+
+    factory.registerSimpleAction("SwitchOnCoffeMachine", std::bind(&CoffeMachine::Open, &coffe_machine)); //?
+
+    factory.registerSimpleCondition("IsCleanProcessFinished", std::bind(IsCleanProcessFinished)); //User command
+    factory.registerSimpleCondition("IsThereEnoughWater", std::bind(IsThereEnoughWater)); //User command
+
+
+    factory.registerSimpleCondition("IsWaterTankRemoved", std::bind(&CoffeMachineROSNode::IsWaterTankRemoved, &coffe_machine_ros_node));
     factory.registerSimpleCondition("IsWaterTankFull", std::bind(IsWaterTankFull));   
     factory.registerSimpleAction("FillWaterTank", std::bind(&WaterTank::Fill, &water_tank));
     factory.registerSimpleCondition("IsWaterTankPlacedInCoffeMachine", std::bind(IsWaterTankPlacedInCoffeMachine));       
@@ -61,31 +74,40 @@ int main()
     std::cout << "creating tree from file" << std::endl;
     auto tree = factory.createTreeFromFile(path);
     std::cout << "tree from file is created" << std::endl;
-    //You can also create SimpleActionNodes using methods of a class
-    /*GripperInterface gripper;
-    factory.registerSimpleAction("OpenGripper", std::bind(&GripperInterface::open, &gripper));
-    factory.registerSimpleAction("CloseGripper", std::bind(&GripperInterface::close, &gripper));*/
 
-//else
-    // Load dynamically a plugin and register the TreeNodes it contains
-    // it automated the registering step.
-    //factory.registerFromPlugin("./libdummy_nodes_dyn.so");
-//#endif
 
-    // Trees are created at deployment-time (i.e. at run-time, but only once at the beginning).
-    // The currently supported format is XML.
-    // IMPORTANT: when the object "tree" goes out of scope, all the TreeNodes are destroyed
 
-    //auto tree = factory.createTreeFromText(xml_text);
-    //auto tree = factory.createTreeFromText(xml_test);
+    //---------------------------------------
+    // keep executin tick until it returns etiher SUCCESS or FAILURE
+    // In case Asyncronous action are needed, can return Running
+    
+    //while (ros::ok())
+    //{
+    std::cout << "holis" << std::endl;
+    while( tree.tickRoot() == NodeStatus::RUNNING)
+    {
+        std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+        //while (ros::ok())
+        //{
+        ros::spinOnce();
+        //}
+    }
+        //if ( tree.tickRoot() == NodeStatus::SUCCESS){
+        //std::cout << tree.tickRoot() << std::endl;
+        //tree.tickRoot();
 
-    // To "execute" a Tree you need to "tick" it.
-    // The tick is propagated to the children based on the logic of the tree.
-    // In this case, the entire sequence is executed, because all the children
-    // of the Sequence return SUCCESS.
-    tree.tickRoot();
+        //}
+        //std::cout << "holis2" << std::endl;
+        //loop_rate.sleep();
+        
+    //}
+     tree.tickRoot();
+    
+
+    std::cout << "holis" << std::endl;
 
     return 0;
+
 }
 
 /* Expected output:
