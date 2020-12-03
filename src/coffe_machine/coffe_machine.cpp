@@ -28,7 +28,9 @@ namespace CoffeMachineNS
     void CoffeMachineROSNode::initializePublishers()
     {
         ROS_INFO("Initializing Publishers");
-        pub_cm_raw_image = nh.advertise<sensor_msgs::Image>("/coffe_machine/image_raw", 100);   
+        pub_cm_raw_image = nh.advertise<sensor_msgs::Image>("/coffe_machine/image_raw", 100);  
+        image_transport::ImageTransport img_tp_(nh); 
+        image_pub_bb_image_out = img_tp_.advertise("/coffe_machine/image_with_output_data", 100);
     }
   
 
@@ -57,6 +59,73 @@ namespace CoffeMachineNS
         //std::cout << cm_raw_image << std::endl;
         //pub_cm_raw_image.publish(cm_raw_image);
     }
+    void CoffeMachineROSNode::copyImage(const sensor_msgs::ImageConstPtr& _msg)
+    {
+        try
+        {
+            img_encoding_ = _msg->encoding;//get image encodings
+            cv_img_ptr_in_ = cv_bridge::toCvCopy(_msg, _msg->encoding);//get image
+        }
+        catch (cv_bridge::Exception& e)
+        {
+            ROS_ERROR("RosImgProcessorNode::image_callback(): cv_bridge exception: %s", e.what());
+            return;
+        }
+        std::cout << "printing cv_img_ptr_in" <<  cv_img_ptr_in_ << std::endl;
+    }
+
+
+    void CoffeMachineROSNode::plotBoundingBoxesInImage(int x_min, int y_min, int x_max, int y_max, int id)
+    {
+         cv::Rect_<int> box;
+         std::vector<cv::Scalar> color_classes(7);
+         color_classes[0] = cv::Scalar(255,0,0); //milk
+         color_classes[1] = cv::Scalar(255,0,0); //coffe
+         color_classes[2] = cv::Scalar(255,0,0); //coffemaker
+         color_classes[3] = cv::Scalar(255,0,0); //cup
+         color_classes[4] = cv::Scalar(255,0,0); //sugar
+         color_classes[5] = cv::Scalar(255,0,0); //marro_tank
+         color_classes[6] = cv::Scalar(255,0,0); //water_tank
+
+         std::vector<std::string> str_classes(7);
+         str_classes[0] = "milk";
+         str_classes[1] = "coffe";
+         str_classes[2] = "coffemaker";
+         str_classes[3] = "cup"; //red
+         str_classes[4] = "sugar";
+         str_classes[5] = "marro_tank";
+         str_classes[6] = "water_tank";
+        //check if new image is there
+        if ( cv_img_ptr_in_ != nullptr )
+        {
+            // copy the input image to the out one
+            cv_img_out_.image = cv_img_ptr_in_->image;
+        }
+
+        box.x = x_min;
+        box.y = y_min;
+        box.width = cvRound(x_max - x_min);
+        box.height = cvRound(y_max - y_min);
+        cv::rectangle(cv_img_out_.image, box, color_classes[id], 3);
+         cv_img_ptr_in_ = nullptr;
+        cv::putText(cv_img_out_.image,str_classes[id], cv::Point(x_min,y_min),cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
+            1.0, // Scale. 2.0 = 2x bigger
+            cv::Scalar(255,255,255), // BGR Color
+            1); // Anti-alias (Optional)
+
+
+    }
+
+    void CoffeMachineROSNode::publishBBImage()
+    {
+        if( !cv_img_out_.image.data ) return;
+            cv_img_out_.header.seq ++;
+            cv_img_out_.header.stamp = ros::Time::now();
+            cv_img_out_.header.frame_id = "camera";
+            cv_img_out_.encoding = img_encoding_;
+            image_pub_bb_image_out.publish(cv_img_out_.toImageMsg());
+               
+    }
 
     darknet_ros_msgs::BoundingBox CoffeMachineROSNode::find_class(const darknet_ros_msgs::BoundingBoxes& msg, std::string dk_class)
     {
@@ -69,7 +138,7 @@ namespace CoffeMachineNS
             {
                 //std::cout << "msg.bounding_boxes[i].Class " << msg.bounding_boxes[i].Class  << std::endl;
                 //std::cout << "dk_class " << dk_class  << std::endl;
-                if (msg.bounding_boxes[i].Class == dk_class)
+                if (msg.bounding_boxes[i].Class.compare(dk_class)==0)
                 {
                     //std::cout << (msg.bounding_boxes[i].Class == dk_class) << std::endl;
                     //std::cout << "bb_prob" << (msg.bounding_boxes[i].probability) << std::endl;
@@ -125,8 +194,32 @@ namespace CoffeMachineNS
 
     BT::NodeStatus CoffeMachineROSNode::IsCleanCupReady(){
 
-
         std::cout << "IsCleanCupReady" << std::endl;
+        auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/usb_cam/image_raw"); //returns a pointer to the message
+        CoffeMachineROSNode::copyImage(image);
+        pub_cm_raw_image.publish(image);
+        darknet_ros_msgs::BoundingBox d_bb_class = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
+        CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_class.xmin, d_bb_class.ymin, d_bb_class.xmax, d_bb_class.ymax, d_bb_class.id);
+        CoffeMachineROSNode::publishBBImage();
+        if (d_bb_class.probability>0.7){
+            std::cout << "A cup is placed in the coffe machine" << std::endl;   
+            std::cout << "bounding_box" << d_bb_class << std::endl;
+            return BT::NodeStatus::SUCCESS;
+
+        }
+        else{
+            return BT::NodeStatus::RUNNING;
+        }
+
+
+
+
+
+
+        /*auto yolo_msg = ros::topic::waitForMessage<darknet_ros_msgs::BoundingBoxes>("");
+        darknet_ros_msgs::BoundingBox d_bb_class = CoffeMachineROSNode::find_class(yolo_msg,"cup");
+
+  
         raw_image_sub = nh.subscribe("/usb_cam/image_raw",1,&CoffeMachineROSNode::raw_image_callback,this);
         openpose_ros_msgs::PointWithProb op_wrist_join = CoffeMachineROSNode::find_joint(cm_openpose_hl, 4);
         if (op_wrist_join.prob>0.7){

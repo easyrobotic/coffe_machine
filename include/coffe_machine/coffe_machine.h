@@ -8,7 +8,8 @@
 #include <darknet_ros_msgs/BoundingBox.h>
 #include <openpose_ros_msgs/OpenPoseHumanList.h>
 #include <openpose_ros_msgs/PointWithProb.h>
-
+#include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 
 namespace CoffeMachineNS{
 
@@ -72,10 +73,20 @@ class CoffeMachineROSNode{
         ros::Publisher pub_cm_raw_image;
         ros::Subscriber bounding_boxes_sub;
         ros::Subscriber openpose_sub;
+        image_transport::Publisher image_pub_bb_image_out;
 
         // member methods as well:
         void initializeSubscribers();        
         void initializePublishers();
+        void copyImage(const sensor_msgs::ImageConstPtr& msg);
+        void plotBoundingBoxesInImage(int x_min, int y_min, int x_max, int y_max, int id);
+        void publishBBImage();
+
+        //using to image threatment
+        std::string img_encoding_;
+        cv_bridge::CvImagePtr cv_img_ptr_in_;
+        cv_bridge::CvImage cv_img_out_;
+        
 
         //internal functions
         void pub_cm_raw_image_fun();

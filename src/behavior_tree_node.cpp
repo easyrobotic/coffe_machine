@@ -83,13 +83,16 @@ int main(int argc, char **argv)
     
     //while (ros::ok())
     //{
+    ros::Rate rate(30);
     std::cout << "holis" << std::endl;
-    while( tree.tickRoot() == NodeStatus::RUNNING)
+    while( ros::ok() && tree.tickRoot() == NodeStatus::RUNNING)
     {
-        std::this_thread::sleep_for( std::chrono::milliseconds(10) );
+        //std::this_thread::sleep_for( std::chrono::milliseconds(10) ); // crear un ros rate i fer rate.sl
         //while (ros::ok())
         //{
+        
         ros::spinOnce();
+        rate.sleep(); //rest time of cycle makes an sleep
         //}
     }
         //if ( tree.tickRoot() == NodeStatus::SUCCESS){
@@ -101,7 +104,7 @@ int main(int argc, char **argv)
         //loop_rate.sleep();
         
     //}
-     tree.tickRoot();
+     //tree.tickRoot(); //does in while 
     
 
     std::cout << "holis" << std::endl;
