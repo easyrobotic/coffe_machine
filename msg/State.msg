@@ -1,0 +1,2 @@
+string NodeType
+string NodeStatus

@@ -10,6 +10,8 @@
 #include <openpose_ros_msgs/PointWithProb.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
+#include <coffe_machine/State.h>    
+#include <opencv2/highgui/highgui.hpp>
 
 namespace CoffeMachineNS{
 
@@ -19,11 +21,7 @@ BT::NodeStatus IsMachineOpen(); //
 //BT::NodeStatus IsCleanCupReady(); //
 
 //AutoClean Subtree
-BT::NodeStatus IsCleanProcessFinished(); //
 BT::NodeStatus IsCupOffCoffeRemoved(); //
-BT::NodeStatus IsThereEnoughWater(); //
-BT::NodeStatus IsWaterTankRemoved(); //
-BT::NodeStatus IsWaterTankFull(); // 
 BT::NodeStatus IsWaterTankPlacedInCoffeMachine(); //
 BT::NodeStatus IsMarroTankFull(); //
 BT::NodeStatus IsMarroTankRemoved(); //
@@ -57,9 +55,32 @@ class CoffeMachineROSNode{
         darknet_ros_msgs::BoundingBoxes cm_bounding_boxes;
         openpose_ros_msgs::OpenPoseHumanList cm_openpose_hl;
 
-        BT::NodeStatus IsCleanCupReady();
-        BT::NodeStatus IsWaterTankRemoved();
 
+        /******************************************************CONDITIONS***********************************************************************/
+        /**********OpenCoffeMachine Subtree*******/
+        BT::NodeStatus IsMachineOpen();
+        BT::NodeStatus IsCleanCupReady();
+        /**********AutoClean Subtree*******/
+        BT::NodeStatus IsCleanProcessFinished();
+        BT::NodeStatus IsThereEnoughWater();
+        BT::NodeStatus IsWaterTankRemoved();
+        BT::NodeStatus IsWaterTankFull();
+        BT::NodeStatus IsWaterTankPlacedInCoffeMachine();
+        BT::NodeStatus IsMarroTankFull();
+        BT::NodeStatus IsMarroTankRemoved();
+        BT::NodeStatus IsMarroTankEmpty();
+        BT::NodeStatus IsMarroTankPlacedInCoffeMachine();
+        /**********PutCoffeCup Subtree*******/
+        BT::NodeStatus IsCoffeCupReady();
+
+        /******************************************************ACTIONS***********************************************************************/
+        /**********OpenCoffeMachine Subtree*******/
+        BT::NodeStatus SwitchOnCoffeMachine();
+        /**********AutoClean Subtree*************/ 
+        BT::NodeStatus FillWaterTank();
+        BT::NodeStatus EmptyMarroTank();
+        /**********PutCoffeCUp Subtree*************/ 
+        BT::NodeStatus PlaceCoffeCup();
     private:
         //ros::Publisher pub;
         ros::NodeHandle nh;
@@ -70,17 +91,21 @@ class CoffeMachineROSNode{
 
         //subscriber and publisher
         ros::Subscriber raw_image_sub;
-        ros::Publisher pub_cm_raw_image;
         ros::Subscriber bounding_boxes_sub;
         ros::Subscriber openpose_sub;
         image_transport::Publisher image_pub_bb_image_out;
+        ros::Publisher pub_cm_raw_image;
+        ros::Publisher bh_tree;
 
         // member methods as well:
         void initializeSubscribers();        
         void initializePublishers();
         void copyImage(const sensor_msgs::ImageConstPtr& msg);
         void plotBoundingBoxesInImage(int x_min, int y_min, int x_max, int y_max, int id);
+        void plotJointInImage(int x, int y, int joint);
+        void publishCmRawImage();
         void publishBBImage();
+        void publishBTState(std::string NodeType, std::string NodeStatus);
 
         //using to image threatment
         std::string img_encoding_;

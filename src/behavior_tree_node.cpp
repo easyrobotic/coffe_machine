@@ -37,27 +37,40 @@ int main(int argc, char **argv)
     //ros::Rate loop_rate(10);
     CoffeMachineROSNode coffe_machine_ros_node = CoffeMachineROSNode(&nh);
 
-    factory.registerSimpleCondition("IsMachineOpen", std::bind(IsMachineOpen)); //User command
-    factory.registerSimpleCondition("IsCleanCupReady", std::bind(&CoffeMachineROSNode::IsCleanCupReady, &coffe_machine_ros_node)); //done
 
-
-    factory.registerSimpleAction("SwitchOnCoffeMachine", std::bind(&CoffeMachine::Open, &coffe_machine)); //?
-
-    factory.registerSimpleCondition("IsCleanProcessFinished", std::bind(IsCleanProcessFinished)); //User command
-    factory.registerSimpleCondition("IsThereEnoughWater", std::bind(IsThereEnoughWater)); //User command
-
-
+    /******************************************************CONDITIONS***********************************************************************/
+    /**********OpenCoffeMachine Subtree*******/
+    factory.registerSimpleCondition("IsMachineOpen", std::bind(&CoffeMachineROSNode::IsMachineOpen, &coffe_machine_ros_node)); 
+    factory.registerSimpleCondition("IsCleanCupReady", std::bind(&CoffeMachineROSNode::IsCleanCupReady, &coffe_machine_ros_node)); 
+    /**********AutoClean Subtree*******/
+    factory.registerSimpleCondition("IsCleanProcessFinished", std::bind(&CoffeMachineROSNode::IsCleanProcessFinished,&coffe_machine_ros_node)); 
+    factory.registerSimpleCondition("IsThereEnoughWater", std::bind(&CoffeMachineROSNode::IsThereEnoughWater,&coffe_machine_ros_node)); 
     factory.registerSimpleCondition("IsWaterTankRemoved", std::bind(&CoffeMachineROSNode::IsWaterTankRemoved, &coffe_machine_ros_node));
-    factory.registerSimpleCondition("IsWaterTankFull", std::bind(IsWaterTankFull));   
-    factory.registerSimpleAction("FillWaterTank", std::bind(&WaterTank::Fill, &water_tank));
-    factory.registerSimpleCondition("IsWaterTankPlacedInCoffeMachine", std::bind(IsWaterTankPlacedInCoffeMachine));       
-    factory.registerSimpleCondition("IsMarroTankFull", std::bind(IsMarroTankFull));     
-    factory.registerSimpleCondition("IsMarroTankRemoved", std::bind(IsMarroTankRemoved));        
-    factory.registerSimpleCondition("IsMarroTankEmpty", std::bind(IsMarroTankEmpty));      
-    factory.registerSimpleAction("EmptyMarroTank", std::bind(&MarroTank::Empty, &marro_tank));   
-    factory.registerSimpleCondition("IsMarroTankPlacedInCoffeMachine", std::bind(IsMarroTankPlacedInCoffeMachine));     
-    factory.registerSimpleCondition("IsCoffeCupReady", std::bind(IsCoffeCupReady));     
-    factory.registerSimpleAction("PlaceCoffeCup", std::bind(&CoffeMachine::PlaceCoffeCup, &coffe_machine));  
+    factory.registerSimpleCondition("IsWaterTankFull", std::bind(&CoffeMachineROSNode::IsWaterTankFull,&coffe_machine_ros_node));   
+    factory.registerSimpleCondition("IsWaterTankPlacedInCoffeMachine", std::bind(&CoffeMachineROSNode::IsWaterTankPlacedInCoffeMachine,&coffe_machine_ros_node));  
+    factory.registerSimpleCondition("IsMarroTankFull", std::bind(&CoffeMachineROSNode::IsMarroTankFull,&coffe_machine_ros_node));      
+    factory.registerSimpleCondition("IsMarroTankRemoved", std::bind(&CoffeMachineROSNode::IsMarroTankRemoved,&coffe_machine_ros_node));  
+    factory.registerSimpleCondition("IsMarroTankEmpty", std::bind(&CoffeMachineROSNode::IsMarroTankEmpty,&coffe_machine_ros_node));     
+    factory.registerSimpleCondition("IsMarroTankPlacedInCoffeMachine", std::bind(&CoffeMachineROSNode::IsMarroTankPlacedInCoffeMachine,&coffe_machine_ros_node));    
+    /**********PutCoffeCup Subtree*******/
+    factory.registerSimpleCondition("IsCoffeCupReady", std::bind(&CoffeMachineROSNode::IsCoffeCupReady,&coffe_machine_ros_node));     
+
+    /******************************************************ACTIONS***********************************************************************/
+    /**********OpenCoffeMachine Subtree*******/
+    factory.registerSimpleAction("SwitchOnCoffeMachine", std::bind(&CoffeMachineROSNode::SwitchOnCoffeMachine, &coffe_machine_ros_node)); 
+    /**********AutoClean Subtree*************/    
+    factory.registerSimpleAction("FillWaterTank", std::bind(&CoffeMachineROSNode::FillWaterTank, &coffe_machine_ros_node));
+    factory.registerSimpleAction("EmptyMarroTank", std::bind(&CoffeMachineROSNode::EmptyMarroTank, &coffe_machine_ros_node));   
+    /**********PutCoffeCup Subtree*************/       
+    factory.registerSimpleAction("PlaceCoffeCup", std::bind(&CoffeMachineROSNode::PlaceCoffeCup, &coffe_machine_ros_node));  
+
+         
+    
+    
+    
+     
+
+    
     factory.registerSimpleCondition("IsDesiredCoffeSelected", std::bind(IsDesiredCoffeSelected));      
     factory.registerSimpleAction("PressDesiredCoffe", std::bind(&CoffeMachine::PressDesiredCoffe, &coffe_machine)); 
     factory.registerSimpleCondition("IsCoffeFinished", std::bind(IsCoffeFinished));     
@@ -84,7 +97,7 @@ int main(int argc, char **argv)
     //while (ros::ok())
     //{
     ros::Rate rate(30);
-    std::cout << "holis" << std::endl;
+    //std::cout << "holis" << std::endl;
     while( ros::ok() && tree.tickRoot() == NodeStatus::RUNNING)
     {
         //std::this_thread::sleep_for( std::chrono::milliseconds(10) ); // crear un ros rate i fer rate.sl

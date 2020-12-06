@@ -21,6 +21,7 @@ namespace CoffeMachineNS
     {
         ROS_INFO("Initializing Subscribers");
         //raw_image_sub = nh.subscribe("/usb_cam/image_raw",100,&CoffeMachineROSNode::raw_image_callback,this);
+        //raw_image_sub = nh.subscribe("/camera/rgb/image_rect_color",1,&CoffeMachineROSNode::raw_image_callback,this);
         bounding_boxes_sub = nh.subscribe("/darknet_ros/bounding_boxes",100,&CoffeMachineROSNode::bounding_boxes_callback,this);
         openpose_sub = nh.subscribe("/openpose_ros/human_list",100,&CoffeMachineROSNode::openpose_hl_callback,this);
     }
@@ -31,15 +32,17 @@ namespace CoffeMachineNS
         pub_cm_raw_image = nh.advertise<sensor_msgs::Image>("/coffe_machine/image_raw", 100);  
         image_transport::ImageTransport img_tp_(nh); 
         image_pub_bb_image_out = img_tp_.advertise("/coffe_machine/image_with_output_data", 100);
+        bh_tree = nh.advertise<coffe_machine::State>("/coffe_machine/Feedback", 100);  
     }
   
 
     void CoffeMachineROSNode::raw_image_callback(const sensor_msgs::Image& msg)
     {
-        //std::cout << "camera_info" << msg << std::endl;
         cm_raw_image = msg;
-        //std::cout << cm_raw_image << std::endl;
         pub_cm_raw_image.publish(cm_raw_image);
+        //auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); //returns a pointer to the message
+        //CoffeMachineROSNode::copyImage(cm_raw_image);
+        //pub_cm_raw_image.publish(cm_raw_image);
     }
 
     void CoffeMachineROSNode::bounding_boxes_callback(const darknet_ros_msgs::BoundingBoxes& msg)
@@ -59,19 +62,50 @@ namespace CoffeMachineNS
         //std::cout << cm_raw_image << std::endl;
         //pub_cm_raw_image.publish(cm_raw_image);
     }
+
+     BT::NodeStatus Global::AskForStatus(std::string NodeName)
+    {
+
+        std::cout << "Please enter an " << NodeName << " NodeStatus value: S, R or F" << std::endl;
+        std::cin >> texto;
+
+        if (texto.compare("S")==0) {
+            std::cout << "The " << NodeName << " NodeStatus is Success" << std::endl;
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        else if (texto.compare("R")==0) {
+            std::cout << "The " << NodeName <<  " NodeStatus is Running" << std::endl;
+            return BT::NodeStatus::RUNNING;
+
+
+        }
+        else{
+            std::cout << "The " << NodeName << " NodeStatus is Failure" << std::endl;
+            return BT::NodeStatus::FAILURE;
+
+
+        }
+    }
     void CoffeMachineROSNode::copyImage(const sensor_msgs::ImageConstPtr& _msg)
     {
         try
         {
             img_encoding_ = _msg->encoding;//get image encodings
             cv_img_ptr_in_ = cv_bridge::toCvCopy(_msg, _msg->encoding);//get image
+            /*if ( cv_img_ptr_in_ != nullptr )
+            {
+                // copy the input image to the out one
+                std::cout << "cv_img_out" << cv_img_out_ << std::endl;
+                cv_img_out_.image = cv_img_ptr_in_->image;
+            }*/
         }
         catch (cv_bridge::Exception& e)
         {
             ROS_ERROR("RosImgProcessorNode::image_callback(): cv_bridge exception: %s", e.what());
             return;
         }
-        std::cout << "printing cv_img_ptr_in" <<  cv_img_ptr_in_ << std::endl;
+        //std::cout << "printing cv_img_ptr_in" <<  cv_img_ptr_in_ << std::endl;
     }
 
 
@@ -81,7 +115,7 @@ namespace CoffeMachineNS
          std::vector<cv::Scalar> color_classes(7);
          color_classes[0] = cv::Scalar(255,0,0); //milk
          color_classes[1] = cv::Scalar(255,0,0); //coffe
-         color_classes[2] = cv::Scalar(255,0,0); //coffemaker
+         color_classes[2] = cv::Scalar(0,0,0); //coffemaker
          color_classes[3] = cv::Scalar(255,0,0); //cup
          color_classes[4] = cv::Scalar(255,0,0); //sugar
          color_classes[5] = cv::Scalar(255,0,0); //marro_tank
@@ -95,25 +129,64 @@ namespace CoffeMachineNS
          str_classes[4] = "sugar";
          str_classes[5] = "marro_tank";
          str_classes[6] = "water_tank";
+
         //check if new image is there
         if ( cv_img_ptr_in_ != nullptr )
         {
             // copy the input image to the out one
             cv_img_out_.image = cv_img_ptr_in_->image;
         }
+        if(id!=-1){
+            box.x = x_min;
+            box.y = y_min;
+            box.width = cvRound(x_max - x_min);
+            box.height = cvRound(y_max - y_min);
+            cv::rectangle(cv_img_out_.image, box, color_classes[id], 3);
+            cv_img_ptr_in_ = nullptr;
+            cv::putText(cv_img_out_.image,str_classes[id], cv::Point(x_min,y_min),cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
+                1.0, // Scale. 2.0 = 2x bigger
+                cv::Scalar(255,255,255), // BGR Color
+                1); // Anti-alias (Optional)
+        }
 
-        box.x = x_min;
-        box.y = y_min;
-        box.width = cvRound(x_max - x_min);
-        box.height = cvRound(y_max - y_min);
-        cv::rectangle(cv_img_out_.image, box, color_classes[id], 3);
-         cv_img_ptr_in_ = nullptr;
-        cv::putText(cv_img_out_.image,str_classes[id], cv::Point(x_min,y_min),cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
+
+    }
+    void CoffeMachineROSNode::plotJointInImage(int x, int y, int joint)
+    {
+         //std::cout << "holis0" << std::endl;
+         std::vector<std::string> name_joint(8);
+         name_joint[0] = "nouse"; //milk
+         name_joint[1] = "neck"; //coffe
+         name_joint[2] = "right_shoulder"; //coffemaker
+         name_joint[3] = "right_elbow"; //cup
+         name_joint[4] = "right_wrist"; //sugar
+         name_joint[5] = "left_shoulder"; //marro_tank
+         name_joint[6] = "left_elbow"; //water_tank
+         name_joint[7] = "left_wrist"; //water_tank
+
+         //std::cout << "holis1" << std::endl;
+        //check if new image is there
+        if ( cv_img_ptr_in_ != nullptr )
+        {
+            // copy the input image to the out one
+            cv_img_out_.image = cv_img_ptr_in_->image;
+        }
+        //std::cout << "holis2" << std::endl;
+        cv::circle(cv_img_out_.image, cv::Point(x, y), 10, CV_RGB(0, 255, 0), -1, CV_AA);
+        //std::cout << "holis3" << std::endl;
+        cv::putText(cv_img_out_.image,name_joint[joint], cv::Point(x,y),cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
             1.0, // Scale. 2.0 = 2x bigger
             cv::Scalar(255,255,255), // BGR Color
             1); // Anti-alias (Optional)
+        //std::cout << "holis4" << std::endl;    
 
 
+    }
+
+    void CoffeMachineROSNode::publishCmRawImage(){
+        auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); //returns a pointer to the message
+        CoffeMachineROSNode::copyImage(image);
+        pub_cm_raw_image.publish(image);
     }
 
     void CoffeMachineROSNode::publishBBImage()
@@ -123,8 +196,18 @@ namespace CoffeMachineNS
             cv_img_out_.header.stamp = ros::Time::now();
             cv_img_out_.header.frame_id = "camera";
             cv_img_out_.encoding = img_encoding_;
+            cv::imshow("image_output", cv_bridge::toCvShare(cv_img_out_.toImageMsg(), "bgr8")->image);
             image_pub_bb_image_out.publish(cv_img_out_.toImageMsg());
+            cv::waitKey(1000);
                
+    }
+
+     void CoffeMachineROSNode::publishBTState(std::string NodeType, std::string NodeStatus)
+    {
+        coffe_machine::State cm_state_msg;
+        cm_state_msg.NodeType = NodeType;
+        cm_state_msg.NodeStatus = NodeStatus;    
+        bh_tree.publish(cm_state_msg);           
     }
 
     darknet_ros_msgs::BoundingBox CoffeMachineROSNode::find_class(const darknet_ros_msgs::BoundingBoxes& msg, std::string dk_class)
@@ -166,6 +249,7 @@ namespace CoffeMachineNS
 
 
 
+
     openpose_ros_msgs::PointWithProb CoffeMachineROSNode::find_joint(const openpose_ros_msgs::OpenPoseHumanList& msg, int num_joint)
     {
         //try
@@ -192,255 +276,431 @@ namespace CoffeMachineNS
         
     //}
 
+
+    
+
+   /* START BT CONDITIONS, ACTIONS*/
+
+   /***************************************************************OpenCoffeMachine Subtree****************************************************************************/
+
+
+   BT::NodeStatus CoffeMachineROSNode::IsMachineOpen()
+    {
+        status = global.AskForStatus("IsMachineOpen");
+        //CoffeMachineROSNode::publishBBImage();
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsMachineOpen", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsMachineOpen", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsMachineOpen", "FAILURE");            
+        }
+
+        return status;
+        //return BT::NodeStatus::SUCCESS;
+    }
+
+
+
+
+
     BT::NodeStatus CoffeMachineROSNode::IsCleanCupReady(){
 
         std::cout << "IsCleanCupReady" << std::endl;
-        auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/usb_cam/image_raw"); //returns a pointer to the message
+        CoffeMachineROSNode::publishCmRawImage();
+        /*auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); //returns a pointer to the message
         CoffeMachineROSNode::copyImage(image);
-        pub_cm_raw_image.publish(image);
-        darknet_ros_msgs::BoundingBox d_bb_class = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
-        CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_class.xmin, d_bb_class.ymin, d_bb_class.xmax, d_bb_class.ymax, d_bb_class.id);
-        CoffeMachineROSNode::publishBBImage();
-        if (d_bb_class.probability>0.7){
-            std::cout << "A cup is placed in the coffe machine" << std::endl;   
-            std::cout << "bounding_box" << d_bb_class << std::endl;
-            return BT::NodeStatus::SUCCESS;
+        pub_cm_raw_image.publish(image);*/
+        darknet_ros_msgs::BoundingBox d_bb_cup = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
+        darknet_ros_msgs::BoundingBox d_bb_coffeemaker = CoffeMachineROSNode::find_class(cm_bounding_boxes,"coffeemaker");
 
+        if ((d_bb_cup.probability>0.6) and (d_bb_coffeemaker.probability>0.1)){
+            if (d_bb_cup.probability>0.6)
+            {
+                std::cout << "A cup is placed in the coffe machine" << std::endl;   
+                std::cout << "bounding_box_cup" << d_bb_cup << std::endl;
+                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id);
+            }
+            if (d_bb_coffeemaker.probability>0.1) 
+            {
+                std::cout << "The coffe machine has been detected" << std::endl;   
+                std::cout << "bounding_box_coffeemaker" << d_bb_coffeemaker << std::endl;        
+                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id);
+            }
+
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsCleanCupReady", "SUCCESS");
+            return BT::NodeStatus::SUCCESS;
         }
         else{
+            //CoffeMachineROSNode::plotBoundingBoxesInImage( 0, 0, 0 , 0, -1);
+            //CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsCleanCupReady", "RUNNING");
             return BT::NodeStatus::RUNNING;
         }
-
-
-
-
-
-
-        /*auto yolo_msg = ros::topic::waitForMessage<darknet_ros_msgs::BoundingBoxes>("");
-        darknet_ros_msgs::BoundingBox d_bb_class = CoffeMachineROSNode::find_class(yolo_msg,"cup");
-
-  
-        raw_image_sub = nh.subscribe("/usb_cam/image_raw",1,&CoffeMachineROSNode::raw_image_callback,this);
-        openpose_ros_msgs::PointWithProb op_wrist_join = CoffeMachineROSNode::find_joint(cm_openpose_hl, 4);
-        if (op_wrist_join.prob>0.7){
-            std::cout << "right joint has been detected in x: "<< op_wrist_join.x << "y: " << op_wrist_join.y << std::endl; 
-            return BT::NodeStatus::SUCCESS; 
-        }
-        else{
-            return BT::NodeStatus::RUNNING;
-        }
-
-        //real one
-        /*darknet_ros_msgs::BoundingBox d_bb_class = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
-        if (d_bb_class.probability>0.7){
-            std::cout << "A cup is placed in the coffe machine" << std::endl;   
-            std::cout << "bounding_box" << d_bb_class << std::endl;
-            return BT::NodeStatus::SUCCESS;
-
-        }*/
-        //else{
-        //    return BT::NodeStatus::RUNNING;
-        //}
 
     }
+
+    BT::NodeStatus CoffeMachineROSNode::SwitchOnCoffeMachine()
+    {
+        //_opened = true;
+        status = global.AskForStatus("SwitchOnCoffeMachine");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("SwitchOnCoffeMachine", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("SwitchOnCoffeMachine", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("SwitchOnCoffeMachine", "FAILURE");            
+        }
+        return status;
+        //return BT::NodeStatus::SUCCESS;
+    }
+
+    
+    
+    
+    
+    /*******************************************AutoClean Subtree******************************************************/
+
+     BT::NodeStatus CoffeMachineROSNode::IsCleanProcessFinished()
+    {
+        status = global.AskForStatus("IsCleanProcessFinished");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsCleanProcessFinished", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsCleanProcessFinished", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsCleanProcessFinished", "FAILURE");            
+        }
+
+        return status;
+        //return BT::NodeStatus::SUCCESS;
+
+    }
+
+    BT::NodeStatus CoffeMachineROSNode::IsThereEnoughWater()
+    {
+        status = global.AskForStatus("IsThereEnoughWater");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsThereEnoughWater", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsThereEnoughWater", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsThereEnoughWater", "FAILURE");            
+        }        
+        return status;
+        //return BT::NodeStatus::SUCCESS;
+
+    }
+
 
     BT::NodeStatus CoffeMachineROSNode::IsWaterTankRemoved(){
         std::cout << "IsWaterTankRemoved" << std::endl;
-        //std::cout << cm_raw_image << std::endl;
-        //std::cout << cm_bounding_boxes << std::endl;
-        raw_image_sub = nh.subscribe("/usb_cam/image_raw",1,&CoffeMachineROSNode::raw_image_callback,this);
-        darknet_ros_msgs::BoundingBox d_bb_class = CoffeMachineROSNode::find_class(cm_bounding_boxes,"water_tank");
-        if (d_bb_class.probability>0.7){
+        CoffeMachineROSNode::publishCmRawImage();
+        darknet_ros_msgs::BoundingBox d_bb_water_tank = CoffeMachineROSNode::find_class(cm_bounding_boxes,"water_tank");
+        openpose_ros_msgs::PointWithProb op_wrist_join = CoffeMachineROSNode::find_joint(cm_openpose_hl, 4);
+        if (op_wrist_join.prob>0.6)
+        {
+            std::cout << "op_wrist_joint" << op_wrist_join << std::endl;
+            CoffeMachineROSNode::plotJointInImage(op_wrist_join.x, op_wrist_join.y, 4);
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsWaterTankRemoved", "SUCCESS"); //!!!!!Needs to be removed as soon as the tank is detected!!!!!
+            return BT::NodeStatus::SUCCESS;
+        }
+
+        if (d_bb_water_tank.probability>0.2){
             std::cout << "a water_tank is placed in the coffe machine" << std::endl;   
-            std::cout << "bounding_box" << d_bb_class << std::endl;
+            std::cout << "bounding_box" << d_bb_water_tank << std::endl;
+            CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_water_tank.xmin, d_bb_water_tank.ymin, d_bb_water_tank.xmax, d_bb_water_tank.ymax, d_bb_water_tank.id);
+
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsWaterTankRemoved", "SUCCESS");
             return BT::NodeStatus::SUCCESS;
 
         }
         else{
-            return BT::NodeStatus::RUNNING;
+            publishBTState("IsWaterTankRemoved", "RUNNING");
+            //return BT::NodeStatus::RUNNING;
         }
-
-        //std::cout << "cm_openpose_hl" << op_wrist_join << std::endl;
- 
-        //if (d_bb_class.probability>0.7){}
-
-        //}
-    
-    return BT::NodeStatus::RUNNING;
-
-    }
 
     
-    BT::NodeStatus Global::AskForStatus(std::string NodeName)
-    {
-
-        std::cout << "Please enter an " << NodeName << " NodeStatus value: S, R or F" << std::endl;
-        std::cin >> texto;
-
-        if (texto.compare("S")==0) {
-            std::cout << "The " << NodeName << " NodeStatus is Success" << std::endl;
-            return BT::NodeStatus::SUCCESS;
-        }
-
-        else if (texto.compare("R")==0) {
-            std::cout << "The " << NodeName <<  " NodeStatus is Running" << std::endl;
-            return BT::NodeStatus::RUNNING;
-
-
-        }
-        else{
-            std::cout << "The " << NodeName << " NodeStatus is Failure" << std::endl;
-            return BT::NodeStatus::FAILURE;
-
-
-        }
-    }
-
-
-    //OpenCoffeMachine Subtree
-
-
-    BT::NodeStatus IsMachineOpen()
-    {
-        status = global.AskForStatus("IsMachineOpen");
-        return status;
-        //return BT::NodeStatus::SUCCESS;
-    }
-
-
-    BT::NodeStatus CoffeMachine::Open()
-    {
-        _opened = true;
-        status = global.AskForStatus("SwitchOnCoffeMachine");
-        return status;
-        //return BT::NodeStatus::SUCCESS;
-    }
-
-
-    //AutoClean Subtree
-
-     BT::NodeStatus IsCleanProcessFinished()
-    {
-        status = global.AskForStatus("IsCleanProcessFinished");
-        return status;
-        //return BT::NodeStatus::SUCCESS;
+        return BT::NodeStatus::RUNNING;
 
     }
 
-       BT::NodeStatus IsThereEnoughWater()
-    {
-        status = global.AskForStatus("IsThereEnoughWater");
-        return status;
-        //return BT::NodeStatus::SUCCESS;
 
-    }
-
-        //BT::NodeStatus IsWaterTankRemoved()
-    //{
-        //status = global.AskForStatus("IsWaterTankRemoved");
-        //return status;
-        //return BT::NodeStatus::SUCCESS;
-
-    //}
-
-    BT::NodeStatus IsWaterTankFull()
+    BT::NodeStatus CoffeMachineROSNode::IsWaterTankFull()
     {
         status = global.AskForStatus("IsWaterTankFull");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsWaterTankFull", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsWaterTankFull", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsWaterTankFull", "FAILURE");            
+        }        
+        
         return status;
-        //std::cout << "[ IsWaterTankFull: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
 
     }
 
-
-    BT::NodeStatus WaterTank::Fill()
+    
+    BT::NodeStatus CoffeMachineROSNode::FillWaterTank()
     {
-        _filled = true;
+        //_filled = true;
         status = global.AskForStatus("FillWaterTank");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("FillWaterTank", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("FillWaterTank", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("FillWaterTank", "FAILURE");            
+        }        
         return status;
-        //std::cout << "[ FillingWaterTank: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
     }
 
 
-       BT::NodeStatus IsWaterTankPlacedInCoffeMachine()
+       BT::NodeStatus CoffeMachineROSNode::IsWaterTankPlacedInCoffeMachine()
     {
         status = global.AskForStatus("IsWaterTankPlacedInCoffeMachine");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsWaterTankPlacedInCoffeMachine", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsWaterTankPlacedInCoffeMachine", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsWaterTankPlacedInCoffeMachine", "FAILURE");            
+        }        
+        
         return status;
-        //std::cout << "[ IsThereEnoughWater: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
 
     }
 
 
-       BT::NodeStatus IsMarroTankFull()
+       BT::NodeStatus CoffeMachineROSNode::IsMarroTankFull()
     {
         status = global.AskForStatus("IsMarroTankFull");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsMarroTankFull", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsMarroTankFull", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsMarroTankFull", "FAILURE");            
+        }        
+        
         return status;
-        //std::cout << "[ IsMarroTankFull: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
 
     }
-       BT::NodeStatus IsMarroTankRemoved()
+       BT::NodeStatus CoffeMachineROSNode::IsMarroTankRemoved()
     {
-        status = global.AskForStatus("IsMarroTankRemoved");
-        return status;
-        //std::cout << "[ IsMarroTankRemoved: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
+        std::cout << "IsMarroTankRemoved" << std::endl;
+        CoffeMachineROSNode::publishCmRawImage();
+        darknet_ros_msgs::BoundingBox d_bb_marro_tank = CoffeMachineROSNode::find_class(cm_bounding_boxes,"marro_tank");
+        std::cout << "test1" << std::endl;
+        openpose_ros_msgs::PointWithProb op_wrist_join = CoffeMachineROSNode::find_joint(cm_openpose_hl, 4);
+        std::cout << "test2" << std::endl;
+        std::cout << "op_wrist_join" << op_wrist_join << std::endl;
+        if (op_wrist_join.prob>0.6)
+        {
+            std::cout << "op_wrist_joint" << op_wrist_join << std::endl;
+            CoffeMachineROSNode::plotJointInImage(op_wrist_join.x, op_wrist_join.y, 4);
+            std::cout << "test3" << std::endl;
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsMarroTankRemoved", "SUCCESS"); //!!!!!Needs to be removed as soon as the tank is detected!!!!!
+            return BT::NodeStatus::SUCCESS;
+        }
+            std::cout << "test6" << std::endl;
+        if (d_bb_marro_tank.probability>0.2){
+            std::cout << "test4" << std::endl;
+            std::cout << "a marro_tank is placed in the coffe machine" << std::endl;   
+            std::cout << "bounding_box" << d_bb_marro_tank << std::endl;
+            CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_marro_tank.xmin, d_bb_marro_tank.ymin, d_bb_marro_tank.xmax, d_bb_marro_tank.ymax, d_bb_marro_tank.id);
+            std::cout << "test5" << std::endl;
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsMarroTankRemoved", "SUCCESS");
+            return BT::NodeStatus::SUCCESS;
+            std::cout << "test7" << std::endl;
+        }
+        else{
+            publishBTState("IsMarroTankRemoved", "RUNNING");
+            return BT::NodeStatus::RUNNING;
+        }
+            std::cout << "test8" << std::endl;
+    
+        return BT::NodeStatus::RUNNING;
+
 
     }
 
-        BT::NodeStatus IsMarroTankEmpty()
+        BT::NodeStatus CoffeMachineROSNode::IsMarroTankEmpty()
     {
         status = global.AskForStatus("IsMarroTankEmpty");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsMarroTankEmpty", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsMarroTankEmpty", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsMarroTankEmpty", "FAILURE");            
+        }        
         return status;
-        //std::cout << "[ IsMarroTankEmpty: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
 
     }
 
-       BT::NodeStatus MarroTank::Empty()
+       BT::NodeStatus CoffeMachineROSNode::EmptyMarroTank()
     {
-        _empty = true;
+       // _empty = true;
         status = global.AskForStatus("EmptyMarroTank");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("EmptyMarroTank", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("EmptyMarroTank", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("EmptyMarroTank", "FAILURE");            
+        }        
         return status;
-        //std::cout << "[ EmptyMarroTank: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
     }
 
-        BT::NodeStatus IsMarroTankPlacedInCoffeMachine()
+        BT::NodeStatus CoffeMachineROSNode::IsMarroTankPlacedInCoffeMachine()
     {
 
         status = global.AskForStatus("IsMarroTankPlacedInCoffeMachine");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsMarroTankPlacedInCoffeMachine", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsMarroTankPlacedInCoffeMachine", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsMarroTankPlacedInCoffeMachine", "FAILURE");            
+        }        
         return status;
-        //std::cout << "[ IsMarroTankPlacedInCoffeMachine: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
 
     }
 
-    //PutCoffeCup Subtree
+        /*******************************************PutCoffeCup Subtree******************************************************/
 
 
-        BT::NodeStatus IsCoffeCupReady()
+        BT::NodeStatus CoffeMachineROSNode::IsCoffeCupReady()
     {
+        std::cout << "IsCoffeCupReady" << std::endl;
+        CoffeMachineROSNode::publishCmRawImage();
+        darknet_ros_msgs::BoundingBox d_bb_cup = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
+        darknet_ros_msgs::BoundingBox d_bb_coffeemaker = CoffeMachineROSNode::find_class(cm_bounding_boxes,"coffeemaker");
 
-        status = global.AskForStatus("IsCoffeCupReady");
-        return status;
-        //std::cout << "[ IsCoffeCupReady: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
+        if ((d_bb_cup.probability>0.8) and (d_bb_coffeemaker.probability>0.1)){
+            if (d_bb_cup.probability>0.8)
+            {
+                std::cout << "A cup is placed in the coffe machine" << std::endl;   
+                std::cout << "bounding_box_cup" << d_bb_cup << std::endl;
+                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id);
+            }
+            if (d_bb_coffeemaker.probability>0.1) 
+            {
+                std::cout << "The coffe machine has been detected" << std::endl;   
+                std::cout << "bounding_box_coffeemaker" << d_bb_coffeemaker << std::endl;        
+                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id);
+            }
+
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsCleanCupReady", "SUCCESS");
+            return BT::NodeStatus::SUCCESS;
+        }
+        else{
+            //CoffeMachineROSNode::plotBoundingBoxesInImage( 0, 0, 0 , 0, -1);
+            //CoffeMachineROSNode::publishBBImage();
+            publishBTState("IsCleanCupReady", "RUNNING");
+            return BT::NodeStatus::RUNNING;
+        }
+
+
 
     }
 
-        BT::NodeStatus CoffeMachine::PlaceCoffeCup()
-    {
-        _coffecuplaced = true;
+        BT::NodeStatus CoffeMachineROSNode::PlaceCoffeCup()
+        {
+        //_coffecuplaced = true;
         status = global.AskForStatus("PlaceCoffeCup");
-        return status;
-        //std::cout << "[ CoffeCupPlaced: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
-    }
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("PlaceCoffeCup", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("PlaceCoffeCup", "RUNNING");            
+        }
 
-    //CoffeType Subtree
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("PlaceCoffeCup", "FAILURE");            
+        }        
+        return status;
+
+        }
+
+        /*******************************************CofeeType Subtree******************************************************/
 
 
         BT::NodeStatus IsDesiredCoffeSelected()
