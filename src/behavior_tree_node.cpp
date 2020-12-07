@@ -54,6 +54,14 @@ int main(int argc, char **argv)
     factory.registerSimpleCondition("IsMarroTankPlacedInCoffeMachine", std::bind(&CoffeMachineROSNode::IsMarroTankPlacedInCoffeMachine,&coffe_machine_ros_node));    
     /**********PutCoffeCup Subtree*******/
     factory.registerSimpleCondition("IsCoffeCupReady", std::bind(&CoffeMachineROSNode::IsCoffeCupReady,&coffe_machine_ros_node));     
+     /**********CoffeeType Subtree*******/        
+    factory.registerSimpleCondition("IsDesiredCoffeSelected", std::bind(&CoffeMachineROSNode::IsDesiredCoffeSelected,&coffe_machine_ros_node));  
+    factory.registerSimpleCondition("IsCoffeFinished", std::bind(&CoffeMachineROSNode::IsCoffeFinished,&coffe_machine_ros_node));     
+    factory.registerSimpleCondition("HasCupOfCoffeBeenRemoved", std::bind(&CoffeMachineROSNode::HasCupOfCoffeBeenRemoved,&coffe_machine_ros_node));  
+    factory.registerSimpleCondition("HasHumanAddedCleaningCup", std::bind(&CoffeMachineROSNode::HasHumanAddedCleaningCup,&coffe_machine_ros_node)); 
+    factory.registerSimpleCondition("HasHumanAddedMilk", std::bind(&CoffeMachineROSNode::HasHumanAddedMilk,&coffe_machine_ros_node)); 
+    factory.registerSimpleCondition("IsMilkDesired", std::bind(&CoffeMachineROSNode::IsMilkDesired,&coffe_machine_ros_node));    
+    factory.registerSimpleCondition("IsSugarDesired", std::bind(&CoffeMachineROSNode::IsSugarDesired,&coffe_machine_ros_node)); 
 
     /******************************************************ACTIONS***********************************************************************/
     /**********OpenCoffeMachine Subtree*******/
@@ -63,26 +71,27 @@ int main(int argc, char **argv)
     factory.registerSimpleAction("EmptyMarroTank", std::bind(&CoffeMachineROSNode::EmptyMarroTank, &coffe_machine_ros_node));   
     /**********PutCoffeCup Subtree*************/       
     factory.registerSimpleAction("PlaceCoffeCup", std::bind(&CoffeMachineROSNode::PlaceCoffeCup, &coffe_machine_ros_node));  
-
-         
-    
+     /**********CoffeeType Subtree*******/    
+    factory.registerSimpleAction("PressDesiredCoffe", std::bind(&CoffeMachineROSNode::PressDesiredCoffe, &coffe_machine_ros_node)); 
+    factory.registerSimpleAction("PlaceCleanCup", std::bind(&CoffeMachineROSNode::PlaceCleanCup, &coffe_machine_ros_node));  
+    factory.registerSimpleAction("SwitchOffCoffeMachine", std::bind(&CoffeMachineROSNode::SwitchOffCoffeMachine, &coffe_machine_ros_node));   
+    factory.registerSimpleAction("AddMilkToCoffe", std::bind(&CoffeMachineROSNode::AddMilkToCoffe, &coffe_machine_ros_node)); 
+    factory.registerSimpleAction("AddSugarToCoffe", std::bind(&CoffeMachineROSNode::AddSugarToCoffe, &coffe_machine_ros_node));  
     
     
      
 
     
-    factory.registerSimpleCondition("IsDesiredCoffeSelected", std::bind(IsDesiredCoffeSelected));      
-    factory.registerSimpleAction("PressDesiredCoffe", std::bind(&CoffeMachine::PressDesiredCoffe, &coffe_machine)); 
-    factory.registerSimpleCondition("IsCoffeFinished", std::bind(IsCoffeFinished));     
-    factory.registerSimpleCondition("HasCupOfCoffeBeenRemoved", std::bind(HasCupOfCoffeBeenRemoved));     
-    factory.registerSimpleCondition("HasHumanAddedCleaningCup", std::bind(HasHumanAddedCleaningCup));    
-    factory.registerSimpleAction("PlaceCleanCup", std::bind(&CoffeMachine::PlaceCleanCup, &coffe_machine)); 
-    factory.registerSimpleAction("SwitchOffCoffeMachine", std::bind(&CoffeMachine::Close, &coffe_machine)); 
-    factory.registerSimpleCondition("HasHumanAddedMilk", std::bind(HasHumanAddedMilk));        
-    factory.registerSimpleCondition("IsMilkDesired", std::bind(IsMilkDesired));    
-    factory.registerSimpleCondition("IsSugarDesired", std::bind(IsSugarDesired));   
-    factory.registerSimpleAction("AddMilkToCoffe", std::bind(&Milk::Add, &milk)); 
-    factory.registerSimpleAction("AddSugarToCoffe", std::bind(&Sugar::Add, &sugar));  
+      
+
+
+   
+   
+
+
+         
+  
+   
 
     std::cout << "creating tree from file" << std::endl;
     auto tree = factory.createTreeFromFile(path);

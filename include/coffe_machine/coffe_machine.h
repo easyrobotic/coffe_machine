@@ -72,6 +72,14 @@ class CoffeMachineROSNode{
         BT::NodeStatus IsMarroTankPlacedInCoffeMachine();
         /**********PutCoffeCup Subtree*******/
         BT::NodeStatus IsCoffeCupReady();
+        /**********CoffeType Subtree*******/          
+        BT::NodeStatus IsDesiredCoffeSelected();
+        BT::NodeStatus IsCoffeFinished();
+        BT::NodeStatus HasCupOfCoffeBeenRemoved();
+        BT::NodeStatus HasHumanAddedCleaningCup();
+        BT::NodeStatus HasHumanAddedMilk();
+        BT::NodeStatus IsMilkDesired();
+        BT::NodeStatus IsSugarDesired();
 
         /******************************************************ACTIONS***********************************************************************/
         /**********OpenCoffeMachine Subtree*******/
@@ -81,6 +89,13 @@ class CoffeMachineROSNode{
         BT::NodeStatus EmptyMarroTank();
         /**********PutCoffeCUp Subtree*************/ 
         BT::NodeStatus PlaceCoffeCup();
+        /**********CoffeType Subtree*******/        
+        BT::NodeStatus PressDesiredCoffe();
+        BT::NodeStatus PlaceCleanCup();
+        BT::NodeStatus SwitchOffCoffeMachine();
+        BT::NodeStatus AddMilkToCoffe();
+        BT::NodeStatus AddSugarToCoffe();
+
     private:
         //ros::Publisher pub;
         ros::NodeHandle nh;

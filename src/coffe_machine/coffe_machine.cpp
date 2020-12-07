@@ -702,106 +702,275 @@ namespace CoffeMachineNS
 
         /*******************************************CofeeType Subtree******************************************************/
 
-
-        BT::NodeStatus IsDesiredCoffeSelected()
+        BT::NodeStatus CoffeMachineROSNode::IsDesiredCoffeSelected()
     {
         status = global.AskForStatus("IsDesiredCoffeSelected");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsDesiredCoffeSelected", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsDesiredCoffeSelected", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsDesiredCoffeSelected", "FAILURE");            
+        }        
         return status;
-        //std::cout << "[ IsDesiredCoffeSelected: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
 
     }
-        BT::NodeStatus CoffeMachine::PressDesiredCoffe()
+
+
+        BT::NodeStatus CoffeMachineROSNode::PressDesiredCoffe()
     {
-        _desiredcoffepressed = true;
+        //_desiredcoffepressed = true;
         status = global.AskForStatus("PressDesiredCoffe");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("PressDesiredCoffe", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("PressDesiredCoffe", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("PressDesiredCoffe", "FAILURE");            
+        }        
         return status;
-        //std::cout << "[ PressDesiredCoffe: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
     }
 
-        BT::NodeStatus IsCoffeFinished()
+        BT::NodeStatus CoffeMachineROSNode::IsCoffeFinished()
     {
         status = global.AskForStatus("IsCoffeFinished");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsCoffeFinished", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsCoffeFinished", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsCoffeFinished", "FAILURE");            
+        }        
         return status;
-        //std::cout << "[ IsCoffeFinished: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
 
     }
 
-       BT::NodeStatus HasCupOfCoffeBeenRemoved()
+       BT::NodeStatus CoffeMachineROSNode::HasCupOfCoffeBeenRemoved()
     {
-        status = global.AskForStatus("HasCupOfCoffeBeenRemoved");
-        return status;
-        //std::cout << "[ HasCupOfCoffeBeenRemoved: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
+        std::cout << "HasCupOfCoffeBeenRemoved" << std::endl;
+        CoffeMachineROSNode::publishCmRawImage();
+        darknet_ros_msgs::BoundingBox d_bb_cup = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
+        darknet_ros_msgs::BoundingBox d_bb_coffeemaker = CoffeMachineROSNode::find_class(cm_bounding_boxes,"coffeemaker");
+
+        if ((d_bb_coffeemaker.probability>0.1) and (not(d_bb_cup.probability>0.6))) 
+        {
+            std::cout << "The coffe machine has been detected" << std::endl;   
+            std::cout << "bounding_box_coffeemaker" << d_bb_coffeemaker << std::endl;        
+            CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id);
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("HasCupOfCoffeBeenRemoved", "SUCCESS");
+            return BT::NodeStatus::SUCCESS;
+        }
+        else{
+            //CoffeMachineROSNode::plotBoundingBoxesInImage( 0, 0, 0 , 0, -1);
+            //CoffeMachineROSNode::publishBBImage();
+            publishBTState("HasCupOfCoffeBeenRemoved", "RUNNING");
+            return BT::NodeStatus::RUNNING;
+        }
 
     }
     
-       BT::NodeStatus HasHumanAddedCleaningCup()
+       BT::NodeStatus CoffeMachineROSNode::HasHumanAddedCleaningCup()
     {
-        status = global.AskForStatus("HasHumanAddedCleaningCup");
-        return status;        
-        //std::cout << "[ HasHumanAddedCleaningCup: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
+        std::cout << "HasHumanAddedCleaningCup" << std::endl;
+        CoffeMachineROSNode::publishCmRawImage();
+        darknet_ros_msgs::BoundingBox d_bb_cup = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
+        darknet_ros_msgs::BoundingBox d_bb_coffeemaker = CoffeMachineROSNode::find_class(cm_bounding_boxes,"coffeemaker");
+
+        if ((d_bb_cup.probability>0.6) and (d_bb_coffeemaker.probability>0.1)){
+            if (d_bb_cup.probability>0.6)
+            {
+                std::cout << "A cup is placed in the coffe machine" << std::endl;   
+                std::cout << "bounding_box_cup" << d_bb_cup << std::endl;
+                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id);
+            }
+            if (d_bb_coffeemaker.probability>0.1) 
+            {
+                std::cout << "The coffe machine has been detected" << std::endl;   
+                std::cout << "bounding_box_coffeemaker" << d_bb_coffeemaker << std::endl;        
+                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id);
+            }
+
+            CoffeMachineROSNode::publishBBImage();
+            publishBTState("HasHumanAddedCleaningCup", "SUCCESS");
+            return BT::NodeStatus::SUCCESS;
+        }
+        else{
+            //CoffeMachineROSNode::plotBoundingBoxesInImage( 0, 0, 0 , 0, -1);
+            //CoffeMachineROSNode::publishBBImage();
+            publishBTState("HasHumanAddedCleaningCup", "RUNNING");
+            return BT::NodeStatus::RUNNING;
+        }
 
     }
 
-        BT::NodeStatus CoffeMachine::PlaceCleanCup()
+        BT::NodeStatus CoffeMachineROSNode::PlaceCleanCup()
     {
-        _cleancuplaced = true;
+        //_cleancuplaced = true;
         status = global.AskForStatus("PlaceCleanCup");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("PlaceCleanCup", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("PlaceCleanCup", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("PlaceCleanCup", "FAILURE");            
+        }      
         return status;  
-        //std::cout << "[ PlaceCleanCup: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
     }
 
-        BT::NodeStatus CoffeMachine::Close()
+        BT::NodeStatus CoffeMachineROSNode::SwitchOffCoffeMachine()
     {
-        _opened = false;
+        //_opened = false;
         status = global.AskForStatus("SwitchOffCoffeMachine");
-        return status; 
-        //std::cout << "[ SwitchOffCoffeMachine: OK ]" << std::endl;
-        //return BT::NodeStatus::SUCCESS;
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("SwitchOffCoffeMachine", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("SwitchOffCoffeMachine", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("SwitchOffCoffeMachine", "FAILURE");            
+        }      
+        return status;  
+
     }
-        BT::NodeStatus HasHumanAddedMilk()
+
+
+        BT::NodeStatus CoffeMachineROSNode::HasHumanAddedMilk()
     {
         status = global.AskForStatus("HasHumanAddedMilk");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("HasHumanAddedMilk", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("HasHumanAddedMilk", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("HasHumanAddedMilk", "FAILURE");            
+        }      
         return status; 
         //std::cout << "[ HasHumanAddedMilk: OK ]" << std::endl;
         //return BT::NodeStatus::SUCCESS;
     }
 
-        BT::NodeStatus IsMilkDesired()
+        BT::NodeStatus CoffeMachineROSNode::IsMilkDesired()
     {
         status = global.AskForStatus("IsMilkDesired");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsMilkDesired", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsMilkDesired", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsMilkDesired", "FAILURE");            
+        }      
         return status; 
         //std::cout << "[ IsMilkDesired: OK ]" << std::endl;
         //return BT::NodeStatus::SUCCESS;
     }
     
-        BT::NodeStatus IsSugarDesired()
+        BT::NodeStatus CoffeMachineROSNode::IsSugarDesired()
     {
         status = global.AskForStatus("IsSugarDesired");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("IsSugarDesired", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("IsSugarDesired", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("IsSugarDesired", "FAILURE");            
+        }      
+
+        
         return status;         
         //std::cout << "[ IsSugarDesired: OK ]" << std::endl;
         //return BT::NodeStatus::SUCCESS;
     }
 
-    BT::NodeStatus Milk::Add()
+    BT::NodeStatus CoffeMachineROSNode::AddMilkToCoffe()
     {
-        _added = false;
+        //_added = false;
         status = global.AskForStatus("AddMilktoCoffe");
+        if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("AddMilktoCoffe", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("AddMilktoCoffe", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("AddMilktoCoffe", "FAILURE");            
+        }      
+
+
         return status;  
         //std::cout << "[ AddMilktoCoffe: OK ]" << std::endl;
         //return BT::NodeStatus::SUCCESS;
     }
 
     
-    BT::NodeStatus Sugar::Add()
+    BT::NodeStatus CoffeMachineROSNode::AddSugarToCoffe()
     {
-        _added = false;
+        //_added = false;
         status = global.AskForStatus("AddSugarToCoffe");
+         if (status == BT::NodeStatus::SUCCESS)
+        {
+            publishBTState("AddSugarToCoffe", "SUCCESS");            
+        }
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("AddSugarToCoffe", "RUNNING");            
+        }
+
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("AddSugarToCoffe", "FAILURE");            
+        }      
         return status;  
         //std::cout << "[ AddSugartoCoffe: OK ]" << std::endl;
         //return BT::NodeStatus::SUCCESS;
