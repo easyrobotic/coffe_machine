@@ -78,6 +78,7 @@ class CoffeMachineROSNode{
         BT::NodeStatus HasCupOfCoffeBeenRemoved();
         BT::NodeStatus HasHumanAddedCleaningCup();
         BT::NodeStatus HasHumanAddedMilk();
+        BT::NodeStatus HasHumanAddedSugar();
         BT::NodeStatus IsMilkDesired();
         BT::NodeStatus IsSugarDesired();
 
@@ -109,15 +110,16 @@ class CoffeMachineROSNode{
         ros::Subscriber bounding_boxes_sub;
         ros::Subscriber openpose_sub;
         image_transport::Publisher image_pub_bb_image_out;
-        ros::Publisher pub_cm_raw_image;
+        ros::Publisher pub_yolo_image_raw;
+        ros::Publisher pub_openpose_image_raw;
         ros::Publisher bh_tree;
 
         // member methods as well:
         void initializeSubscribers();        
         void initializePublishers();
         void copyImage(const sensor_msgs::ImageConstPtr& msg);
-        void plotBoundingBoxesInImage(int x_min, int y_min, int x_max, int y_max, int id);
-        void plotJointInImage(int x, int y, int joint);
+        void plotBoundingBoxesInImage(int x_min, int y_min, int x_max, int y_max, int id, cv_bridge::CvImagePtr image);
+        void plotJointInImage(int x, int y, int joint,cv_bridge::CvImagePtr image);
         void publishCmRawImage();
         void publishBBImage();
         void publishBTState(std::string NodeType, std::string NodeStatus);
@@ -133,7 +135,10 @@ class CoffeMachineROSNode{
         openpose_ros_msgs::PointWithProb find_joint(const openpose_ros_msgs::OpenPoseHumanList& msg, int num_joint);
         darknet_ros_msgs::BoundingBox find_class(const darknet_ros_msgs::BoundingBoxes& msg, std::string dk_class);
 
-   
+        //internal properties
+        bool yolo_fk;
+        bool openpose_fk;
+        bool image_sent;
 
 
             //ros::ServiceServer reset_service;

@@ -60,6 +60,7 @@ int main(int argc, char **argv)
     factory.registerSimpleCondition("HasCupOfCoffeBeenRemoved", std::bind(&CoffeMachineROSNode::HasCupOfCoffeBeenRemoved,&coffe_machine_ros_node));  
     factory.registerSimpleCondition("HasHumanAddedCleaningCup", std::bind(&CoffeMachineROSNode::HasHumanAddedCleaningCup,&coffe_machine_ros_node)); 
     factory.registerSimpleCondition("HasHumanAddedMilk", std::bind(&CoffeMachineROSNode::HasHumanAddedMilk,&coffe_machine_ros_node)); 
+    factory.registerSimpleCondition("HasHumanAddedSugar", std::bind(&CoffeMachineROSNode::HasHumanAddedSugar,&coffe_machine_ros_node)); 
     factory.registerSimpleCondition("IsMilkDesired", std::bind(&CoffeMachineROSNode::IsMilkDesired,&coffe_machine_ros_node));    
     factory.registerSimpleCondition("IsSugarDesired", std::bind(&CoffeMachineROSNode::IsSugarDesired,&coffe_machine_ros_node)); 
 

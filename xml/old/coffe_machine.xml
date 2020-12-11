@@ -84,23 +84,20 @@
             <Timeout msec="11000000">
                 <Fallback name="arallel">
                     <Condition ID="HasHumanAddedMilk"/>
-                    <Fallback>
-                        <Inverter>
-                            <Condition ID="IsMilkDesired"/>
-                        </Inverter>
-                        <Action ID="AddMilkToCoffe"/>
-                    </Fallback>
-                </Fallback>
-            </Timeout>
-            <Timeout msec="11000000">
-                <Fallback>
-                    <Condition ID="HasHumanAddedSugar"/>
-                    <Fallback>
-                        <Inverter>
-                            <Condition ID="IsSugarDesired"/>
-                        </Inverter>
-                        <Action ID="AddSugarToCoffe"/>
-                    </Fallback>
+                    <Sequence>
+                        <Fallback>
+                            <Inverter>
+                                <Condition ID="IsMilkDesired"/>
+                            </Inverter>
+                            <Action ID="AddMilkToCoffe"/>
+                        </Fallback>
+                        <Fallback>
+                            <Inverter>
+                                <Condition ID="IsSugarDesired"/>
+                            </Inverter>
+                            <Action ID="AddSugarToCoffe"/>
+                        </Fallback>
+                    </Sequence>
                 </Fallback>
             </Timeout>
         </Sequence>
@@ -146,7 +143,6 @@
         <Condition ID="HasCupOfCoffeBeenRemoved"/>
         <Condition ID="HasHumanAddedCleaningCup"/>
         <Condition ID="HasHumanAddedMilk"/>
-        <Condition ID="HasHumanAddedSugar"/>
         <Condition ID="IsCleanCupReady"/>
         <Condition ID="IsCleanProcessFinished"/>
         <Condition ID="IsCoffeCupReady"/>
