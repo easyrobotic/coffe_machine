@@ -12,6 +12,9 @@
 #include <image_transport/image_transport.h>
 #include <coffe_machine/State.h>    
 #include <opencv2/highgui/highgui.hpp>
+//#include <unistd.h>
+//#include <stdio.h>
+#include <dirent.h>
 
 namespace CoffeMachineNS{
 
@@ -121,7 +124,7 @@ class CoffeMachineROSNode{
         void plotBoundingBoxesInImage(int x_min, int y_min, int x_max, int y_max, int id, cv_bridge::CvImagePtr image);
         void plotJointInImage(int x, int y, int joint,cv_bridge::CvImagePtr image);
         void publishCmRawImage();
-        void publishBBImage();
+        void publishBBImage(std::string image_name);
         void publishBTState(std::string NodeType, std::string NodeStatus);
 
         //using to image threatment

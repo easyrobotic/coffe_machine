@@ -114,13 +114,13 @@ namespace CoffeMachineNS
     {
          cv::Rect_<int> box;
          std::vector<cv::Scalar> color_classes(7);
-         color_classes[0] = cv::Scalar(255,0,0); //milk
-         color_classes[1] = cv::Scalar(255,0,0); //coffe
+         color_classes[0] = cv::Scalar(255,255,255); //milk
+         color_classes[1] = cv::Scalar(128,64,0); //coffe
          color_classes[2] = cv::Scalar(0,0,0); //coffemaker
          color_classes[3] = cv::Scalar(255,0,0); //cup
-         color_classes[4] = cv::Scalar(255,0,0); //sugar
-         color_classes[5] = cv::Scalar(255,0,0); //marro_tank
-         color_classes[6] = cv::Scalar(255,0,0); //water_tank
+         color_classes[4] = cv::Scalar(246,210,88); //sugar
+         color_classes[5] = cv::Scalar(90,53,47); //marro_tank
+         color_classes[6] = cv::Scalar(0,128,255); //water_tank
 
          std::vector<std::string> str_classes(7);
          str_classes[0] = "milk";
@@ -145,10 +145,15 @@ namespace CoffeMachineNS
             box.height = cvRound(y_max - y_min);
             cv::rectangle(cv_img_out_.image, box, color_classes[id], 3);
             cv_img_ptr_in_ = nullptr;
-            cv::putText(cv_img_out_.image,str_classes[id], cv::Point(x_min,y_min),cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
+            cv::putText(cv_img_out_.image,str_classes[id], cv::Point(x_min,y_min),cv::FONT_HERSHEY_DUPLEX, // Font
                 1.0, // Scale. 2.0 = 2x bigger
                 cv::Scalar(255,255,255), // BGR Color
                 1); // Anti-alias (Optional)
+
+            /*cv::circle(cv_img_out_.image, cv::Point(x_min, y_min), 5, CV_RGB(255, 0, 0), -1, CV_AA);
+            cv::circle(cv_img_out_.image, cv::Point(x_min, y_max), 5, CV_RGB(255, 0, 0), -1, CV_AA);
+            cv::circle(cv_img_out_.image, cv::Point(x_max, y_min), 5, CV_RGB(255, 0, 0), -1, CV_AA);
+            cv::circle(cv_img_out_.image, cv::Point(x_max, y_max), 5, CV_RGB(255, 0, 0), -1, CV_AA);*/
         }
 
 
@@ -157,14 +162,24 @@ namespace CoffeMachineNS
     {
          //std::cout << "holis0" << std::endl;
          std::vector<std::string> name_joint(8);
-         name_joint[0] = "nouse"; //milk
-         name_joint[1] = "neck"; //coffe
-         name_joint[2] = "right_shoulder"; //coffemaker
-         name_joint[3] = "right_elbow"; //cup
-         name_joint[4] = "right_wrist"; //sugar
-         name_joint[5] = "left_shoulder"; //marro_tank
-         name_joint[6] = "left_elbow"; //water_tank
-         name_joint[7] = "left_wrist"; //water_tank
+         name_joint[0] = "nouse"; 
+         name_joint[1] = "neck"; 
+         name_joint[2] = "right_shoulder"; 
+         name_joint[3] = "right_elbow"; 
+         name_joint[4] = "right_wrist"; 
+         name_joint[5] = "left_shoulder"; 
+         name_joint[6] = "left_elbow"; 
+         name_joint[7] = "left_wrist"; 
+
+        std::vector<cv::Scalar> color_classes(8);
+         color_classes[0] = cv::Scalar(254,127,156); 
+         color_classes[1] = cv::Scalar(202,0,42); 
+         color_classes[2] = cv::Scalar(255,105,0); 
+         color_classes[3] = cv::Scalar(255,211,0); 
+         color_classes[4] = cv::Scalar(255,255,0); 
+         color_classes[5] = cv::Scalar(57,255,20); 
+         color_classes[6] = cv::Scalar(76,187,23); 
+         color_classes[7] = cv::Scalar(11,102,35); 
 
          //std::cout << "holis1" << std::endl;
         //check if new image is there
@@ -176,7 +191,7 @@ namespace CoffeMachineNS
             cv_img_out_.image = image->image;
         }
         //std::cout << "holis2" << std::endl;
-        cv::circle(cv_img_out_.image, cv::Point(x, y), 10, CV_RGB(0, 255, 0), -1, CV_AA);
+        cv::circle(cv_img_out_.image, cv::Point(x, y), 10, color_classes[joint], -1, CV_AA);
         //std::cout << "holis3" << std::endl;
         cv::putText(cv_img_out_.image,name_joint[joint], cv::Point(x,y),cv::FONT_HERSHEY_COMPLEX_SMALL, // Font
             1.0, // Scale. 2.0 = 2x bigger
@@ -193,16 +208,19 @@ namespace CoffeMachineNS
         pub_cm_raw_image.publish(image);
     }*/
 
-    void CoffeMachineROSNode::publishBBImage()
+    void CoffeMachineROSNode::publishBBImage(std::string image_name)
     {
         if( !cv_img_out_.image.data ) return;
             cv_img_out_.header.seq ++;
             cv_img_out_.header.stamp = ros::Time::now();
             cv_img_out_.header.frame_id = "camera";
             cv_img_out_.encoding = img_encoding_;
-            cv::imshow("image_output", cv_bridge::toCvShare(cv_img_out_.toImageMsg(), "bgr8")->image);
+            std::cout << "holis9" << std::endl;
+            std::string path_ = "/home/julia/tfm/src/coffe_machine/output_img/";   
+            cv::imwrite(path_+image_name, cv_bridge::toCvShare(cv_img_out_.toImageMsg(), "bgr8")->image) ;
+            //cv::imshow("image_output", cv_bridge::toCvShare(cv_img_out_.toImageMsg(), "bgr8")->image);
             image_pub_bb_image_out.publish(cv_img_out_.toImageMsg());
-            cv::waitKey(1000);
+            //cv::waitKey(1000); //save the image and go ahead
                
     }
 
@@ -324,7 +342,7 @@ namespace CoffeMachineNS
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
         img_encoding_ = image->encoding;//get image encodings
-        cv_img_ptr_in_ = cv_bridge::toCvCopy(image, image->encoding);//get image
+        cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get image
         //image_sent = true;
         
         
@@ -337,9 +355,9 @@ namespace CoffeMachineNS
             if (d_bb_cup.probability>0.6)
             {
                     std::cout << "A cup is placed in the coffe machine" << std::endl;   
-                    CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,cv_img_ptr_in_);     
-                    CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id,cv_img_ptr_in_);
-                    CoffeMachineROSNode::publishBBImage();
+                    CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,image_in);     
+                    CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id,image_in);
+                    CoffeMachineROSNode::publishBBImage("1.Clean_cup_is_ready.jpg");
                     publishBTState("IsCleanCupReady", "SUCCESS");
                     return BT::NodeStatus::SUCCESS;
             
@@ -442,18 +460,23 @@ namespace CoffeMachineNS
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
         img_encoding_ = image->encoding;//get image encodings
-        cv_img_ptr_in_ = cv_bridge::toCvCopy(image, image->encoding);//get image
+        cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get image
 
         auto yolo_msg = ros::topic::waitForMessage<darknet_ros_msgs::BoundingBoxes>("/darknet_ros/bounding_boxes");
         darknet_ros_msgs::BoundingBox d_bb_water_tank = CoffeMachineROSNode::find_class(*yolo_msg,"water_tank");
         if (d_bb_water_tank.probability>0.2){
             pub_openpose_image_raw.publish(image);
             auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
-            openpose_ros_msgs::PointWithProb op_wrist_join = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
-            if (op_wrist_join.prob>0){
-                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_water_tank.xmin, d_bb_water_tank.ymin, d_bb_water_tank.xmax, d_bb_water_tank.ymax, d_bb_water_tank.id,cv_img_ptr_in_);
-                CoffeMachineROSNode::plotJointInImage(op_wrist_join.x, op_wrist_join.y, 4,cv_img_ptr_in_);
-                CoffeMachineROSNode::publishBBImage();
+            openpose_ros_msgs::PointWithProb op_wrist_join_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
+            openpose_ros_msgs::PointWithProb op_wrist_join_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
+            if ((op_wrist_join_right.prob>0)and(op_wrist_join_left.prob>0)){
+                CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_water_tank.xmin, d_bb_water_tank.ymin, d_bb_water_tank.xmax, d_bb_water_tank.ymax, d_bb_water_tank.id,image_in);
+                CoffeMachineROSNode::plotJointInImage(op_wrist_join_right.x, op_wrist_join_right.y, 4, image_in);
+                CoffeMachineROSNode::plotJointInImage(op_wrist_join_left.x, op_wrist_join_left.y, 7, image_in);
+                if 
+                fabs(x - 0.5 * (xmin+xmax)) < (0.5 *  (xmax-xmin) + dist)
+
+                CoffeMachineROSNode::publishBBImage("2.Human_handling_water_tank.jpg");
                 publishBTState("IsWaterTankRemoved", "SUCCESS");
                 return BT::NodeStatus::SUCCESS;
 
@@ -576,7 +599,7 @@ namespace CoffeMachineNS
             if (op_wrist_join.prob>0){
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_marro_tank.xmin, d_bb_marro_tank.ymin, d_bb_marro_tank.xmax, d_bb_marro_tank.ymax, d_bb_marro_tank.id,cv_img_ptr_in_);
                 CoffeMachineROSNode::plotJointInImage(op_wrist_join.x, op_wrist_join.y, 4,cv_img_ptr_in_);
-                CoffeMachineROSNode::publishBBImage();
+                CoffeMachineROSNode::publishBBImage("3.Human_handling_marro_tank");
                 publishBTState("IsMarroTankRemoved", "SUCCESS");
                 return BT::NodeStatus::SUCCESS;
 
@@ -683,7 +706,7 @@ namespace CoffeMachineNS
                     std::cout << "A cup is placed in the coffe machine" << std::endl;   
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,cv_img_ptr_in_);     
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id,cv_img_ptr_in_);
-                    CoffeMachineROSNode::publishBBImage();
+                    CoffeMachineROSNode::publishBBImage("4.Coffe_Cup_is_Ready");
                     publishBTState("IsCoffeCupReady", "SUCCESS");
                     return BT::NodeStatus::SUCCESS;
             
@@ -849,7 +872,7 @@ namespace CoffeMachineNS
                     std::cout << "A cup is placed in the coffe machine" << std::endl;   
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,cv_img_ptr_in_);     
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id,cv_img_ptr_in_);
-                    CoffeMachineROSNode::publishBBImage();
+                    CoffeMachineROSNode::publishBBImage("5.Human_added_cleaning_cup");
                     publishBTState("HasHumanAddedCleaningCup", "SUCCESS");
                     return BT::NodeStatus::SUCCESS;
             
@@ -927,7 +950,7 @@ namespace CoffeMachineNS
             if (op_wrist_join.prob>0){
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_marro_tank.xmin, d_bb_marro_tank.ymin, d_bb_marro_tank.xmax, d_bb_marro_tank.ymax, d_bb_marro_tank.id,cv_img_ptr_in_);
                 CoffeMachineROSNode::plotJointInImage(op_wrist_join.x, op_wrist_join.y, 4,cv_img_ptr_in_);
-                CoffeMachineROSNode::publishBBImage();
+                CoffeMachineROSNode::publishBBImage("6.Human_has_added_milk");
                 publishBTState("HasHumanAddedMilk", "SUCCESS");
                 return BT::NodeStatus::SUCCESS;
 
@@ -962,7 +985,7 @@ namespace CoffeMachineNS
             if (op_wrist_join.prob>0){
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_marro_tank.xmin, d_bb_marro_tank.ymin, d_bb_marro_tank.xmax, d_bb_marro_tank.ymax, d_bb_marro_tank.id,cv_img_ptr_in_);
                 CoffeMachineROSNode::plotJointInImage(op_wrist_join.x, op_wrist_join.y, 4,cv_img_ptr_in_);
-                CoffeMachineROSNode::publishBBImage();
+                CoffeMachineROSNode::publishBBImage("7.Human_has_added_sugar");
                 publishBTState("HasHumanAddedMilk", "SUCCESS");
                 return BT::NodeStatus::SUCCESS;
 
