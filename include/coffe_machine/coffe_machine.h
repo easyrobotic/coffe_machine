@@ -124,13 +124,13 @@ class CoffeMachineROSNode{
         void plotBoundingBoxesInImage(int x_min, int y_min, int x_max, int y_max, int id, cv_bridge::CvImagePtr image);
         void plotJointInImage(int x, int y, int joint,cv_bridge::CvImagePtr image);
         void publishCmRawImage();
-        void publishBBImage(std::string image_name);
+        void publishBBImage(std::string image_name,cv_bridge::CvImagePtr image);
         void publishBTState(std::string NodeType, std::string NodeStatus);
 
         //using to image threatment
         std::string img_encoding_;
         cv_bridge::CvImagePtr cv_img_ptr_in_;
-        cv_bridge::CvImage cv_img_out_;
+        //cv_bridge::CvImage cv_img_out_;
         
 
         //internal functions
