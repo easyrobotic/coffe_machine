@@ -12,6 +12,7 @@
 #include <image_transport/image_transport.h>
 #include <coffe_machine/State.h>    
 #include <opencv2/highgui/highgui.hpp>
+#include<unistd.h>
 //#include <unistd.h>
 //#include <stdio.h>
 #include <dirent.h>

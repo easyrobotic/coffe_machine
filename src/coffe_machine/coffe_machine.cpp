@@ -268,7 +268,10 @@ namespace CoffeMachineNS
 
         }
         catch(...){
-             std::cout << "cannot find a bounding box" << std::endl;
+            darknet_ros_msgs::BoundingBox bb_null;        
+            bb_null.xmin = 0.0;  
+            std::cout << "cannot find a bounding box" << std::endl;
+            return bb_null;
         }
 
     }
@@ -473,10 +476,10 @@ namespace CoffeMachineNS
             auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
             openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
             openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
-            if ((op_wrist_joint_right.prob>0)and(op_wrist_joint_left.prob>0)){
+            if ((op_wrist_joint_right.prob>0)or(op_wrist_joint_left.prob>0)){
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_water_tank.xmin, d_bb_water_tank.ymin, d_bb_water_tank.xmax, d_bb_water_tank.ymax, d_bb_water_tank.id,image_in);
  
-                float dist = 100.0;
+                float dist = 60.0;
                 float dist_center_x = fabs(op_wrist_joint_right.x - 0.5 * (d_bb_water_tank.xmin+d_bb_water_tank.xmax));
                 float dist_medium_x = 0.5 *  (d_bb_water_tank.xmax-d_bb_water_tank.xmin) + dist;
                 float dist_center_y = fabs(op_wrist_joint_right.y - 0.5 * (d_bb_water_tank.ymin+d_bb_water_tank.ymax));
@@ -561,22 +564,52 @@ namespace CoffeMachineNS
 
        BT::NodeStatus CoffeMachineROSNode::IsWaterTankPlacedInCoffeMachine()
     {
-        status = global.AskForStatus("IsWaterTankPlacedInCoffeMachine");
-        if (status == BT::NodeStatus::SUCCESS)
-        {
-            publishBTState("IsWaterTankPlacedInCoffeMachine", "SUCCESS");            
-        }
-        else if (status == BT::NodeStatus::RUNNING)
-        {
-            publishBTState("IsWaterTankPlacedInCoffeMachine", "RUNNING");            
-        }
 
-        else if (status == BT::NodeStatus::FAILURE)
+        std::cout << "IsWaterTankPlacedInCoffeMachine" << std::endl;
+        auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
+        CoffeMachineROSNode::copyImage(image);
+   
+
+        //img_encoding_ = image->encoding;//get image encodings
+        cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get imageolo
+
+        pub_openpose_image_raw.publish(image);
+        auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
+        openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
+        openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
+
+        if ((op_wrist_joint_right.prob > 0.1) or (op_wrist_joint_right.prob > 0.1)) 
         {
-            publishBTState("IsWaterTankPlacedInCoffeMachine", "FAILURE");            
-        }        
-        
-        return status;
+            std::cout << "joint_rigt.prob " << op_wrist_joint_right.prob << std::endl;
+            std::cout << "joint_left.prob " << op_wrist_joint_left.prob << std::endl;
+
+            std::cout << "sleeping" << std::endl;
+
+            pub_yolo_image_raw.publish(image);
+
+            unsigned int microsecond = 1000000;
+            usleep(5 * microsecond);//sleeps for 15 seconds // wait until yolo gives the current info
+
+            std::cout << "finished" << std::endl;
+
+            auto yolo_msg = ros::topic::waitForMessage<darknet_ros_msgs::BoundingBoxes>("/darknet_ros/bounding_boxes");
+            std::cout << "yolo_msg" << yolo_msg << std::endl;
+            darknet_ros_msgs::BoundingBox d_bb_water_tank = CoffeMachineROSNode::find_class(*yolo_msg,"water_tank");
+            if((yolo_msg == NULL) or (d_bb_water_tank.xmin == 0.0)){
+                std::cout << "no water tank found in the coffe machine" << std::endl;
+                publishBTState("IsWaterTankPlacedInCoffeMachine", "SUCCESS");
+                return BT::NodeStatus::SUCCESS;       
+            }
+            else{
+                publishBTState("IsWaterTankPlacedInCoffeMachine", "FAILURE");
+                return BT::NodeStatus::FAILURE;    
+            }
+
+        }
+        else{
+                publishBTState("IsWaterTankPlacedInCoffeMachine", "RUNNING");
+                return BT::NodeStatus::RUNNING;  
+        }
 
     }
 
@@ -617,7 +650,7 @@ namespace CoffeMachineNS
             auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
             openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
             openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
-            if ((op_wrist_joint_right.prob>0)and(op_wrist_joint_left.prob>0)){
+            if ((op_wrist_joint_right.prob>0)or(op_wrist_joint_left.prob>0)){
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_marro_tank.xmin, d_bb_marro_tank.ymin, d_bb_marro_tank.xmax, d_bb_marro_tank.ymax, d_bb_marro_tank.id,image_in);
  
                 float dist = 100.0;
@@ -702,23 +735,51 @@ namespace CoffeMachineNS
 
         BT::NodeStatus CoffeMachineROSNode::IsMarroTankPlacedInCoffeMachine()
     {
+        std::cout << "IsMarroTankPlacedInCoffeMachine" << std::endl;
+        auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
+        CoffeMachineROSNode::copyImage(image);
+   
 
-        status = global.AskForStatus("IsMarroTankPlacedInCoffeMachine");
-        if (status == BT::NodeStatus::SUCCESS)
+        //img_encoding_ = image->encoding;//get image encodings
+        cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get imageolo
+
+        pub_openpose_image_raw.publish(image);
+        auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
+        openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
+        openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
+
+        if ((op_wrist_joint_right.prob > 0.1) or (op_wrist_joint_right.prob > 0.1)) 
         {
-            publishBTState("IsMarroTankPlacedInCoffeMachine", "SUCCESS");            
+            std::cout << "joint_rigt.prob " << op_wrist_joint_right.prob << std::endl;
+            std::cout << "joint_left.prob " << op_wrist_joint_left.prob << std::endl;
+
+            std::cout << "sleeping" << std::endl;
+
+            pub_yolo_image_raw.publish(image);
+
+            unsigned int microsecond = 1000000;
+            usleep(5 * microsecond);//sleeps for 15 seconds // wait until yolo gives the current info
+
+            std::cout << "finished" << std::endl;
+
+            auto yolo_msg = ros::topic::waitForMessage<darknet_ros_msgs::BoundingBoxes>("/darknet_ros/bounding_boxes");
+            std::cout << "yolo_msg" << yolo_msg << std::endl;
+            darknet_ros_msgs::BoundingBox d_bb_water_tank = CoffeMachineROSNode::find_class(*yolo_msg,"marro_tank");
+            if((yolo_msg == NULL) or (d_bb_water_tank.xmin == 0.0)){
+                std::cout << "no marro tank found in the coffe machine" << std::endl;
+                publishBTState("IsMarroTankPlacedInCoffeMachine", "SUCCESS");
+                return BT::NodeStatus::SUCCESS;       
+            }
+            else{
+                publishBTState("IsMarroTankPlacedInCoffeMachine", "FAILURE");
+                return BT::NodeStatus::FAILURE;    
+            }
+
         }
-        else if (status == BT::NodeStatus::RUNNING)
-        {
-            publishBTState("IsMarroTankPlacedInCoffeMachine", "RUNNING");            
+        else{
+                publishBTState("IsMarroTankPlacedInCoffeMachine", "RUNNING");
+                return BT::NodeStatus::RUNNING;  
         }
-
-        else if (status == BT::NodeStatus::FAILURE)
-        {
-            publishBTState("IsMarroTankPlacedInCoffeMachine", "FAILURE");            
-        }        
-        return status;
-
     }
 
         /*******************************************PutCoffeCup Subtree******************************************************/
@@ -852,41 +913,51 @@ namespace CoffeMachineNS
 
        BT::NodeStatus CoffeMachineROSNode::HasCupOfCoffeBeenRemoved()
     {
-        /*std::cout << "HasCupOfCoffeBeenRemoved" << std::endl;
-        //CoffeMachineROSNode::publishCmRawImage();
-        darknet_ros_msgs::BoundingBox d_bb_cup = CoffeMachineROSNode::find_class(cm_bounding_boxes,"cup");
-        darknet_ros_msgs::BoundingBox d_bb_coffeemaker = CoffeMachineROSNode::find_class(cm_bounding_boxes,"coffeemaker");
+        std::cout << "HasCupOfCoffeBeenRemoved" << std::endl;
+        auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
+        CoffeMachineROSNode::copyImage(image);
+   
 
-        if ((d_bb_coffeemaker.probability>0.1) and (not(d_bb_cup.probability>0.6))) 
+        //img_encoding_ = image->encoding;//get image encodings
+        cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get imageolo
+
+        pub_openpose_image_raw.publish(image);
+        auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
+        openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
+        openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
+
+        if ((op_wrist_joint_right.prob > 0.1) or (op_wrist_joint_right.prob > 0.1)) 
         {
-            std::cout << "The coffe machine has been detected" << std::endl;   
-            std::cout << "bounding_box_coffeemaker" << d_bb_coffeemaker << std::endl;        
-            CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id);
-            CoffeMachineROSNode::publishBBImage();
-            publishBTState("HasCupOfCoffeBeenRemoved", "SUCCESS");
-            return BT::NodeStatus::SUCCESS;
+            std::cout << "joint_rigt.prob " << op_wrist_joint_right.prob << std::endl;
+            std::cout << "joint_left.prob " << op_wrist_joint_left.prob << std::endl;
+
+            std::cout << "sleeping" << std::endl;
+
+            pub_yolo_image_raw.publish(image);
+
+            unsigned int microsecond = 1000000;
+            usleep(5 * microsecond);//sleeps for 15 seconds // wait until yolo gives the current info
+
+            std::cout << "finished" << std::endl;
+
+            auto yolo_msg = ros::topic::waitForMessage<darknet_ros_msgs::BoundingBoxes>("/darknet_ros/bounding_boxes");
+            std::cout << "yolo_msg" << yolo_msg << std::endl;
+            darknet_ros_msgs::BoundingBox d_bb_water_tank = CoffeMachineROSNode::find_class(*yolo_msg,"cup");
+            if((yolo_msg == NULL) or (d_bb_water_tank.xmin == 0.0)){
+                std::cout << "no coffee cup has been found in the coffe machine" << std::endl;
+                publishBTState("HasCupOfCoffeBeenRemoved", "SUCCESS");
+                return BT::NodeStatus::SUCCESS;       
+            }
+            else{
+                publishBTState("HasCupOfCoffeBeenRemoved", "FAILURE");
+                return BT::NodeStatus::FAILURE;    
+            }
+
         }
         else{
-            //CoffeMachineROSNode::plotBoundingBoxesInImage( 0, 0, 0 , 0, -1);
-            //CoffeMachineROSNode::publishBBImage();
-            publishBTState("HasCupOfCoffeBeenRemoved", "RUNNING");
-            return BT::NodeStatus::RUNNING;
-        }*/
-        status = global.AskForStatus("HasCupOfCoffeBeenRemoved");
-        if (status == BT::NodeStatus::SUCCESS)
-        {
-            publishBTState("HasCupOfCoffeBeenRemoved", "SUCCESS");            
+                publishBTState("HasCupOfCoffeBeenRemoved", "RUNNING");
+                return BT::NodeStatus::RUNNING;  
         }
-        else if (status == BT::NodeStatus::RUNNING)
-        {
-            publishBTState("HasCupOfCoffeBeenRemoved", "RUNNING");            
-        }
-
-        else if (status == BT::NodeStatus::FAILURE)
-        {
-            publishBTState("HasCupOfCoffeBeenRemoved", "FAILURE");            
-        }        
-        return status;
 
     }
     
