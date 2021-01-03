@@ -7,7 +7,7 @@ using namespace BT;
 
 static const char* xml_text;
 
-std::string path = "/home/julia/tfm/src/coffee_machine/xml/coffe_machine.xml";
+std::string path = "/home/julia/tfm/src/coffee_machine/xml/coffee_machine.xml";
 //std::string path = "./../xml/coffe_machine.xml";
 //std::string path = "./coffe_machine_v2.xml";
 

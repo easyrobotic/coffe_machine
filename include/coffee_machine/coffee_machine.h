@@ -6,6 +6,8 @@
 #include <sensor_msgs/Image.h>
 #include <darknet_ros_msgs/BoundingBoxes.h>
 #include <darknet_ros_msgs/BoundingBox.h>
+#include <darknet_ros_msgs/CheckForObjectsActionGoal.h>
+#include <darknet_ros_msgs/CheckForObjectsActionResult.h>
 #include <openpose_ros_msgs/OpenPoseHumanList.h>
 #include <openpose_ros_msgs/PointWithProb.h>
 #include <cv_bridge/cv_bridge.h>
@@ -117,6 +119,7 @@ class CoffeMachineROSNode{
         ros::Publisher pub_yolo_image_raw;
         ros::Publisher pub_openpose_image_raw;
         ros::Publisher bh_tree;
+        ros::Publisher dr_goal;
 
         // member methods as well:
         void initializeSubscribers();        
@@ -143,6 +146,7 @@ class CoffeMachineROSNode{
         bool yolo_fk;
         bool openpose_fk;
         bool image_sent;
+        float param_dist;
 
 
             //ros::ServiceServer reset_service;
