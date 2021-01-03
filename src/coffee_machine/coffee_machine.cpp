@@ -278,7 +278,7 @@ namespace CoffeMachineNS
 
         if (d_bb_coffeemaker.probability>0.1)
         {
-            if (d_bb_cup.probability>0.6)
+            if (d_bb_cup.probability>0.2)
             {
                     std::cout << "A cup is placed in the coffee machine" << std::endl;   
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,image_in);     
@@ -381,10 +381,13 @@ namespace CoffeMachineNS
 
     BT::NodeStatus CoffeMachineROSNode::IsWaterTankRemoved(){
 
-        unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds , giving time to the person to remove the water_tank
-
         std::cout << "IsWaterTankRemoved" << std::endl;
+
+        unsigned int microsecond = 1000000;
+        usleep(5 * microsecond);//sleeps for 3 seconds , giving time to the person to remove the water_tank
+
+        std::cout << "Starting the detection" << std::endl;
+ 
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
@@ -397,6 +400,7 @@ namespace CoffeMachineNS
             auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
             openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
             openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
+            
             if ((op_wrist_joint_right.prob>0)or(op_wrist_joint_left.prob>0)){
                 
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_water_tank.xmin, d_bb_water_tank.ymin, d_bb_water_tank.xmax, d_bb_water_tank.ymax, d_bb_water_tank.id,image_in);
@@ -479,9 +483,11 @@ namespace CoffeMachineNS
 
        BT::NodeStatus CoffeMachineROSNode::IsWaterTankPlacedInCoffeMachine()
     {
-        unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 5 seconds , giving time to the person to place the water_tank in the coffe_machine
         std::cout << "IsWaterTankPlacedInCoffeMachine" << std::endl;
+        unsigned int microsecond = 1000000;
+        usleep(5 * microsecond);//sleeps for 5 seconds , giving time to the person to place the water_tank in the coffe_machine
+
+        std::cout << "Starting the detection" << std::endl;
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         //CoffeMachineROSNode::copyImage(image);
         //cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get imageolo
@@ -496,8 +502,8 @@ namespace CoffeMachineNS
         auto actionresult = ros::topic::waitForMessage<darknet_ros_msgs::CheckForObjectsActionResult>("/darknet_ros/check_for_objects/result",ros::Duration(10)); 
         if(actionresult != NULL){
             darknet_ros_msgs::CheckForObjectsActionResult result = *actionresult;
-        
-            if (result.result.bounding_boxes.bounding_boxes[0].Class == "water_tank"){
+            darknet_ros_msgs::BoundingBox d_bb_water_tank = CoffeMachineROSNode::find_class(result.result.bounding_boxes,"water_tank");
+            if ((d_bb_water_tank.probability>0.2)){
                     publishBTState("IsWaterTankPlacedInCoffeMachine", "RUNNING");
                     return BT::NodeStatus::RUNNING;  
             }
@@ -540,10 +546,14 @@ namespace CoffeMachineNS
     }
        BT::NodeStatus CoffeMachineROSNode::IsMarroTankRemoved()
     {
-        unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds , giving time to the person to remove the marro tank
 
         std::cout << "IsMarroTankRemoved" << std::endl;
+
+        unsigned int microsecond = 1000000;
+        usleep(5 * microsecond);//sleeps for 3 seconds , giving time to the person to remove the marro tank
+
+
+        std::cout << "Starting the detection" << std::endl;
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
@@ -635,9 +645,11 @@ namespace CoffeMachineNS
 
         BT::NodeStatus CoffeMachineROSNode::IsMarroTankPlacedInCoffeMachine()
     {
+        std::cout << "IsMarroTankPlacedInCoffeMachine" << std::endl;
         unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 5 seconds , giving time to the person to place the marro_tank in the coffe_machine
-        std::cout << "IsWaterTankPlacedInCoffeMachine" << std::endl;
+        usleep(5 * microsecond);//sleeps for 5 seconds , giving time to the person to place the marro_tank in the coffe_machine
+        std::cout << "Starting the detection" << std::endl;
+        
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         //CoffeMachineROSNode::copyImage(image);
         //cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get imageolo
@@ -648,12 +660,15 @@ namespace CoffeMachineNS
         CheckForobjectsActionGoal.goal.image = *image;
         dr_goal.publish(CheckForobjectsActionGoal);
 
-        
+        //std::cout << "holis" << std::endl;
         auto actionresult = ros::topic::waitForMessage<darknet_ros_msgs::CheckForObjectsActionResult>("/darknet_ros/check_for_objects/result",ros::Duration(10)); 
         if(actionresult != NULL){
+    
+
+
             darknet_ros_msgs::CheckForObjectsActionResult result = *actionresult;
-        
-            if (result.result.bounding_boxes.bounding_boxes[0].Class == "marro_tank"){
+            darknet_ros_msgs::BoundingBox d_bb_marro_tank = CoffeMachineROSNode::find_class(result.result.bounding_boxes,"marro_tank");
+            if (d_bb_marro_tank.probability>0.2){
                     publishBTState("IsMarroTankPlacedInCoffeMachine", "RUNNING");
                     return BT::NodeStatus::RUNNING;  
             }
@@ -676,9 +691,11 @@ namespace CoffeMachineNS
 
         BT::NodeStatus CoffeMachineROSNode::IsCoffeCupReady()
     {
-        unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds
         std::cout << "IsCoffeCupReady" << std::endl;
+        unsigned int microsecond = 1000000;
+        usleep(5 * microsecond);//sleeps for 3 seconds
+
+        std::cout << "Starting the detection" << std::endl;
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); //returns a pointer to the message
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
@@ -717,9 +734,12 @@ namespace CoffeMachineNS
 
         BT::NodeStatus CoffeMachineROSNode::PlaceCoffeCup() //estaria bé posar-ho
     {
+
+        std::cout << "PlaceCoffeCup" << std::endl;
         unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds
-        std::cout << "IsCoffeCupReady" << std::endl;
+        usleep(5 * microsecond);//sleeps for 3 seconds
+
+        std::cout << "Starting the detection" << std::endl;
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); //returns a pointer to the message
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
@@ -823,7 +843,7 @@ namespace CoffeMachineNS
     {
     
         unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds 
+        usleep(5 * microsecond);//sleeps for 3 seconds 
         std::cout << "IsWaterTankPlacedInCoffeMachine" << std::endl;
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         //CoffeMachineROSNode::copyImage(image);
@@ -860,9 +880,11 @@ namespace CoffeMachineNS
     
        BT::NodeStatus CoffeMachineROSNode::HasHumanAddedCleaningCup()
     {
-        unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds 
         std::cout << "HasHumanAddedCleaningCup" << std::endl;
+        unsigned int microsecond = 1000000;
+        usleep(5 * microsecond);//sleeps for 3 seconds 
+
+        std::cout << "Starting the detection" << std::endl;
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); //returns a pointer to the message
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
@@ -880,7 +902,7 @@ namespace CoffeMachineNS
                     std::cout << "A cup is placed in the coffe machine" << std::endl;   
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,image_in);     
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id,image_in);
-                    CoffeMachineROSNode::publishBBImage("Clean_cup_has_been_added.jpg",image_in);
+                    CoffeMachineROSNode::publishBBImage("6.Clean_cup_has_been_added.jpg",image_in);
                     publishBTState("HasHumanAddedCleaningCup", "SUCCESS");
                     return BT::NodeStatus::SUCCESS;
             
@@ -945,9 +967,13 @@ namespace CoffeMachineNS
 
         BT::NodeStatus CoffeMachineROSNode::HasHumanAddedMilk()
     {
-        unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds 
         std::cout << "HasHumanAddedMilk" << std::endl;
+      
+        unsigned int microsecond = 1000000;
+        usleep(7 * microsecond);//sleeps for 3 seconds 
+
+        std::cout << "Starting the detection" << std::endl;
+
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
@@ -977,7 +1003,7 @@ namespace CoffeMachineNS
                     std::cout << "Human is handling milk with left hand" << std::endl;
                 }  
 
-                CoffeMachineROSNode::publishBBImage("4.Human_adding_milk.jpg",image_in);
+                CoffeMachineROSNode::publishBBImage("7.Human_adding_milk.jpg",image_in);
                 publishBTState("HasHumanAddedMilk", "SUCCESS");
                 return BT::NodeStatus::SUCCESS;
 
@@ -996,9 +1022,12 @@ namespace CoffeMachineNS
 
     BT::NodeStatus CoffeMachineROSNode::HasHumanAddedSugar()
     {
-        unsigned int microsecond = 1000000;
-        usleep(3 * microsecond);//sleeps for 3 seconds 
         std::cout << "HasHumanAddedSugar" << std::endl;
+         unsigned int microsecond = 1000000;
+        usleep(7 * microsecond);//sleeps for 3 seconds 
+
+        std::cout << "Starting the detection" << std::endl;
+
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         CoffeMachineROSNode::copyImage(image);
         pub_yolo_image_raw.publish(image);
@@ -1028,7 +1057,7 @@ namespace CoffeMachineNS
                     std::cout << "Human is handling sugar with left hand" << std::endl;
                 }  
 
-                CoffeMachineROSNode::publishBBImage("5.Human_adding_sugar.jpg",image_in);
+                CoffeMachineROSNode::publishBBImage("8.Human_adding_sugar.jpg",image_in);
                 publishBTState("HasHumanAddedSugar", "SUCCESS");
                 return BT::NodeStatus::SUCCESS;
 
