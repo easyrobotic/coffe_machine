@@ -7,19 +7,19 @@
             <Fallback>
                 <Condition ID="IsThereEnoughWater"/>
                 <Sequence>
-                    <Timeout msec="5000">
+                    <Timeout msec="120000">
                         <Condition ID="IsWaterTankRemoved"/>
                     </Timeout>
                     <Fallback>
-                        <Timeout msec="5000">
+                        <Timeout msec="120000">
                             <Condition ID="IsWaterTankFull"/>
                         </Timeout>
                         <Action ID="FillWaterTank"/>
                     </Fallback>
-                    <Timeout msec="5000">
-                        <Condition ID="IsWaterTankPlacedInCoffeMachine"/>
+                    <Timeout msec="120000">
+                        <Condition ID="IsWaterTankPlacedInCoffeeMachine"/>
                     </Timeout>
-                    <Timeout msec="5000">
+                    <Timeout msec="120000">
                         <Condition ID="IsCleanProcessFinished"/>
                     </Timeout>
                 </Sequence>
@@ -29,19 +29,19 @@
                     <Condition ID="IsMarroTankFull"/>
                 </Inverter>
                 <Sequence>
-                    <Timeout msec="5000">
+                    <Timeout msec="120000">
                         <Condition ID="IsMarroTankRemoved"/>
                     </Timeout>
                     <Fallback>
-                        <Timeout msec="5000">
+                        <Timeout msec="120000">
                             <Condition ID="IsMarroTankEmpty"/>
                         </Timeout>
                         <Action ID="EmptyMarroTank"/>
                     </Fallback>
-                    <RetryUntilSuccesful num_attempts="100">
-                        <Condition ID="IsMarroTankPlacedInCoffeMachine"/>
+                    <RetryUntilSuccesful num_attempts="15">
+                        <Condition ID="IsMarroTankPlacedInCoffeeMachine"/>
                     </RetryUntilSuccesful>
-                    <Timeout msec="5000">
+                    <Timeout msec="120000">
                         <Condition ID="IsCleanProcessFinished"/>
                     </Timeout>
                 </Sequence>
@@ -51,62 +51,62 @@
     <!-- ////////// -->
     <BehaviorTree ID="BehaviorTree">
         <Sequence>
-            <SubTree ID="OpenCoffeMachine" __shared_blackboard="false"/>
+            <SubTree ID="OpenCoffeeMachine" __shared_blackboard="false"/>
             <SubTree ID="AutoClean" __shared_blackboard="false"/>
-            <SubTree ID="PutCoffeCup" __shared_blackboard="false"/>
-            <SubTree ID="CoffeType" __shared_blackboard="false"/>
+            <SubTree ID="PutCoffeeCup" __shared_blackboard="false"/>
+            <SubTree ID="CoffeeType" __shared_blackboard="false"/>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
-    <BehaviorTree ID="CoffeType">
+    <BehaviorTree ID="CoffeeType">
         <Sequence>
             <Fallback>
-                <Timeout msec="5000">
-                    <Condition ID="IsDesiredCoffeSelected"/>
+                <Timeout msec="120000">
+                    <Condition ID="IsDesiredCoffeeSelected"/>
                 </Timeout>
-                <Action ID="PressDesiredCoffe"/>
+                <Action ID="PressDesiredCoffee"/>
             </Fallback>
-            <Timeout msec="5000">
-                <Condition ID="IsCoffeFinished"/>
+            <Timeout msec="120000">
+                <Condition ID="IsCoffeeFinished"/>
             </Timeout>
-            <Timeout msec="5000">
-                <Condition ID="HasCupOfCoffeBeenRemoved"/>
+            <Timeout msec="120000">
+                <Condition ID="HasCupOfCoffeeBeenRemoved"/>
             </Timeout>
-            <Timeout msec="5000">
+            <Timeout msec="120000">
                 <Fallback>
                     <Condition ID="HasHumanAddedCleaningCup"/>
                     <Sequence>
                         <Action ID="PlaceCleanCup"/>
-                        <Action ID="SwitchOffCoffeMachine"/>
+                        <Action ID="SwitchOffCoffeeMachine"/>
                     </Sequence>
                 </Fallback>
             </Timeout>
-            <Timeout msec="5000">
-                <Sequence>
+            <Timeout msec="120000">
+                <Fallback name="arallel">
+                    <Condition ID="HasHumanAddedMilk"/>
                     <Fallback>
-                        <Condition ID="HasHumanAddedMilk"/>
-                        <Fallback>
-                            <Inverter>
-                                <Condition ID="IsMilkDesired"/>
-                            </Inverter>
-                            <Action ID="AddMilkToCoffe"/>
-                        </Fallback>
+                        <Inverter>
+                            <Condition ID="IsMilkDesired"/>
+                        </Inverter>
+                        <Action ID="AddMilkToCoffee"/>
                     </Fallback>
+                </Fallback>
+            </Timeout>
+            <Timeout msec="120000">
+                <Fallback>
+                    <Condition ID="HasHumanAddedSugar"/>
                     <Fallback>
-                        <Condition ID="HasHumanAddedSugar"/>
-                        <Fallback>
-                            <Inverter>
-                                <Condition ID="IsSugarDesired"/>
-                            </Inverter>
-                            <Action ID="AddSugarToCoffe"/>
-                        </Fallback>
+                        <Inverter>
+                            <Condition ID="IsSugarDesired"/>
+                        </Inverter>
+                        <Action ID="AddSugarToCoffee"/>
                     </Fallback>
-                </Sequence>
+                </Fallback>
             </Timeout>
         </Sequence>
     </BehaviorTree>
     <!-- ////////// -->
-    <BehaviorTree ID="OpenCoffeMachine">
+    <BehaviorTree ID="OpenCoffeeMachine">
         <Fallback>
             <Condition ID="IsMachineOpen"/>
             <Sequence>
@@ -114,66 +114,66 @@
                     <Condition ID="IsCleanCupReady"/>
                 </RetryUntilSuccesful>
                 <Fallback>
-                    <Timeout msec="5000">
+                    <Timeout msec="60000">
                         <Condition ID="IsMachineOpen"/>
                     </Timeout>
-                    <Action ID="SwitchOnCoffeMachine"/>
+                    <Action ID="SwitchOnCoffeeMachine"/>
                 </Fallback>
             </Sequence>
         </Fallback>
     </BehaviorTree>
     <!-- ////////// -->
-    <BehaviorTree ID="PutCoffeCup">
+    <BehaviorTree ID="PutCoffeeCup">
         <Fallback>
-            <Timeout msec="5000">
-                <Condition ID="IsCoffeCupReady"/>
+            <Timeout msec="120000">
+                <Condition ID="IsCoffeeCupReady"/>
             </Timeout>
-            <Action ID="PlaceCoffeCup"/>
+            <Action ID="PlaceCoffeeCup"/>
         </Fallback>
     </BehaviorTree>
     <!-- ////////// -->
     <TreeNodesModel>
-        <Action ID="AddMilkToCoffe"/>
-        <Action ID="AddSugarToCoffe"/>
+        <Action ID="AddMilkToCoffee"/>
+        <Action ID="AddSugarToCoffee"/>
         <SubTree ID="AutoClean">
             <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
         </SubTree>
-        <SubTree ID="CoffeType">
+        <SubTree ID="CoffeeType">
             <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
         </SubTree>
         <Action ID="EmptyMarroTank"/>
         <Action ID="FillWaterTank"/>
-        <Condition ID="HasCupOfCoffeBeenRemoved"/>
+        <Condition ID="HasCupOfCoffeeBeenRemoved"/>
         <Condition ID="HasHumanAddedCleaningCup"/>
         <Condition ID="HasHumanAddedMilk"/>
         <Condition ID="HasHumanAddedSugar"/>
         <Condition ID="IsCleanCupReady"/>
         <Condition ID="IsCleanProcessFinished"/>
-        <Condition ID="IsCoffeCupReady"/>
-        <Condition ID="IsCoffeFinished"/>
-        <Condition ID="IsDesiredCoffeSelected"/>
+        <Condition ID="IsCoffeeCupReady"/>
+        <Condition ID="IsCoffeeFinished"/>
+        <Condition ID="IsDesiredCoffeeSelected"/>
         <Condition ID="IsMachineOpen"/>
         <Condition ID="IsMarroTankEmpty"/>
         <Condition ID="IsMarroTankFull"/>
-        <Condition ID="IsMarroTankPlacedInCoffeMachine"/>
+        <Condition ID="IsMarroTankPlacedInCoffeeMachine"/>
         <Condition ID="IsMarroTankRemoved"/>
         <Condition ID="IsMilkDesired"/>
         <Condition ID="IsSugarDesired"/>
         <Condition ID="IsThereEnoughWater"/>
         <Condition ID="IsWaterTankFull"/>
-        <Condition ID="IsWaterTankPlacedInCoffeMachine"/>
+        <Condition ID="IsWaterTankPlacedInCoffeeMachine"/>
         <Condition ID="IsWaterTankRemoved"/>
-        <SubTree ID="OpenCoffeMachine">
+        <SubTree ID="OpenCoffeeMachine">
             <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
         </SubTree>
         <Action ID="PlaceCleanCup"/>
-        <Action ID="PlaceCoffeCup"/>
-        <Action ID="PressDesiredCoffe"/>
-        <SubTree ID="PutCoffeCup">
+        <Action ID="PlaceCoffeeCup"/>
+        <Action ID="PressDesiredCoffee"/>
+        <SubTree ID="PutCoffeeCup">
             <input_port default="false" name="__shared_blackboard">If false (default), the Subtree has an isolated blackboard and needs port remapping</input_port>
         </SubTree>
-        <Action ID="SwitchOffCoffeMachine"/>
-        <Action ID="SwitchOnCoffeMachine"/>
+        <Action ID="SwitchOffCoffeeMachine"/>
+        <Action ID="SwitchOnCoffeeMachine"/>
     </TreeNodesModel>
     <!-- ////////// -->
 </root>

@@ -10,7 +10,7 @@
 #include <openpose_ros_msgs/PointWithProb.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
-#include <coffe_machine/State.h>    
+#include <coffee_machine/State.h>    
 #include <opencv2/highgui/highgui.hpp>
 #include<unistd.h>
 //#include <unistd.h>

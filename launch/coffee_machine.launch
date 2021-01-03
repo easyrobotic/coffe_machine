@@ -1,6 +1,6 @@
 <launch>
   <!--node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" -->
-  <node name="coffe_machine" pkg="coffe_machine" type="behavior_tree_node" output="screen" />
+  <node name="coffee_machine" pkg="coffee_machine" type="behavior_tree_node" output="screen" />
   <!--/node-->
   <node name="raw_image" pkg="image_view" type="image_view" respawn="false" output="screen">
     <remap from="image" to="/camera/rgb/image_rect_color"/>

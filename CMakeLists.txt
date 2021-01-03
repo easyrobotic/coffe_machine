@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(coffe_machine)
+project(coffee_machine)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -112,7 +112,7 @@ find_package(OpenCV 3.2 REQUIRED)
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES coffe_machine
+  LIBRARIES coffee_machine
   CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs message_runtime
   #DEPENDS system_lib
 )
@@ -130,7 +130,7 @@ include_directories(
 
 ## Declare a C++ library
  add_library(${PROJECT_NAME}
-   src/${PROJECT_NAME}/coffe_machine.cpp
+   src/${PROJECT_NAME}/coffee_machine.cpp
 )
 
 ## Add cmake target dependencies of the library
@@ -141,8 +141,8 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-# add_executable(${PROJECT_NAME}_node src/coffe_machine_node.cpp)
-add_executable(behavior_tree_node src/behavior_tree_node.cpp src/coffe_machine/coffe_machine.cpp)
+# add_executable(${PROJECT_NAME}_node src/coffee_machine_node.cpp)
+add_executable(behavior_tree_node src/behavior_tree_node.cpp src/coffee_machine/coffee_machine.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -211,7 +211,7 @@ target_link_libraries( behavior_tree_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_coffe_machine.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_coffee_machine.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()
