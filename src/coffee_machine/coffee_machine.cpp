@@ -844,7 +844,7 @@ namespace CoffeMachineNS
     
         unsigned int microsecond = 1000000;
         usleep(5 * microsecond);//sleeps for 3 seconds 
-        std::cout << "IsWaterTankPlacedInCoffeMachine" << std::endl;
+        std::cout << "HasCupOfCoffeBeenRemoved" << std::endl;
         auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); 
         //CoffeMachineROSNode::copyImage(image);
         //cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get imageo
@@ -897,7 +897,7 @@ namespace CoffeMachineNS
 
         if (d_bb_coffeemaker.probability>0.1)
         {
-            if (d_bb_cup.probability>0.6)
+            if (d_bb_cup.probability>0.2)
             {
                     std::cout << "A cup is placed in the coffe machine" << std::endl;   
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,image_in);     
@@ -987,7 +987,7 @@ namespace CoffeMachineNS
             auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
             openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
             openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
-            if ((op_wrist_joint_right.prob>0)and(op_wrist_joint_left.prob>0)){
+            if ((op_wrist_joint_right.prob>0)or(op_wrist_joint_left.prob>0)){
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_milk.xmin, d_bb_milk.ymin, d_bb_milk.xmax, d_bb_milk.ymax, d_bb_milk.id,image_in);
  
                 if ((fabs(op_wrist_joint_right.x - 0.5 * (d_bb_milk.xmin+d_bb_milk.xmax)) < (0.5 *  (d_bb_milk.xmax-d_bb_milk.xmin) + param_dist))and
@@ -1041,7 +1041,7 @@ namespace CoffeMachineNS
             auto openpose_msg = ros::topic::waitForMessage<openpose_ros_msgs::OpenPoseHumanList>("/openpose_ros/human_list"); 
             openpose_ros_msgs::PointWithProb op_wrist_joint_right = CoffeMachineROSNode::find_joint(*openpose_msg, 4);
             openpose_ros_msgs::PointWithProb op_wrist_joint_left = CoffeMachineROSNode::find_joint(*openpose_msg, 7);
-            if ((op_wrist_joint_right.prob>0)and(op_wrist_joint_left.prob>0)){
+            if ((op_wrist_joint_right.prob>0)or(op_wrist_joint_left.prob>0)){
                 CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_sugar.xmin, d_bb_sugar.ymin, d_bb_sugar.xmax, d_bb_sugar.ymax, d_bb_sugar.id,image_in);
 
                 if ((fabs(op_wrist_joint_right.x - 0.5 * (d_bb_sugar.xmin+d_bb_sugar.xmax)) < (0.5 *  (d_bb_sugar.xmax-d_bb_sugar.xmin) + param_dist))and
