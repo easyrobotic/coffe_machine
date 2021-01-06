@@ -1,0 +1,4 @@
+<launch>
+    <include file="$(find darknet_ros)/launch/yolo_v3.launch" />
+    <include file="$(find openpose_ros)/launch/openpose_ros.launch" />
+</launch>
