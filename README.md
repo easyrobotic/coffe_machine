@@ -4,19 +4,18 @@ Behavior tree implementation of making a coffee using the package  [BehaviorTree
 
 Actions and conditions of this behavior are used to see if the human is handling some object in the following way.
 
- 1. First it detects the human left ant right wrist using the package [openpose](https://github.com/CMU-Perceptual-Computing-Lab/openpose) merged in ROS with the package [openpose_ros]{https://github.com/firephinx/openpose_ros}.
+ 1. First, it detects the human left ant right wrist using the package [openpose](https://github.com/CMU-Perceptual-Computing-Lab/openpose) merged in ROS with the package [openpose_ros](https://github.com/firephinx/openpose_ros).
  2. Second, the neural network [darknet](https://github.com/pjreddie/darknet) has been trained in order to detect the following objects:
-        - milk
-        - coffee
-        - coffeemaker
-        - cup
-        - sugar
-        - marro_tank
-        - water_tank
- 3. Once the human pose and object are detected, an algoritm has been developed in order to detect if the person is handling the object. 
+       - milk
+       - coffee
+       - coffee maker
+       - cup
+       - sugar
+       - marro_tank
+       - water_tank
+ 3. Once the human pose and object is detected, an algorithm has been developed in order to detect if the person is handling the object. 
 
- Bag files can be foun in the three tests folder. It
-  can be found in [rosbag_files](https://drive.google.com/drive/folders/15Y5ckfjOt-66Ck-eKTsaKYBuWFjE0j34?usp=sharing).
+ Bag files can be found in the three tests folder. It can be found in [rosbag_files](https://drive.google.com/drive/folders/15Y5ckfjOt-66Ck-eKTsaKYBuWFjE0j34?usp=sharing).
 
 
 
@@ -32,6 +31,6 @@ Actions and conditions of this behavior are used to see if the human is handling
     - *rostopic echo /coffe_machine/Feedback*
 
 
-An example can be found in:
+An example can be found here:
 
 ![picture](test_1_IsWaterTankRemoved.png)
