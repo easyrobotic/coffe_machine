@@ -708,7 +708,7 @@ namespace CoffeMachineNS
 
         if (d_bb_coffeemaker.probability>0.1)
         {
-            if (d_bb_cup.probability>0.6)
+            if (d_bb_cup.probability>0.2)
             {
                     std::cout << "A cup is placed in the coffe machine" << std::endl;   
                     CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,image_in);     
@@ -735,43 +735,21 @@ namespace CoffeMachineNS
         BT::NodeStatus CoffeMachineROSNode::PlaceCoffeCup() //estaria bé posar-ho
     {
 
-        std::cout << "PlaceCoffeCup" << std::endl;
-        unsigned int microsecond = 1000000;
-        usleep(5 * microsecond);//sleeps for 3 seconds
-
-        std::cout << "Starting the detection" << std::endl;
-        auto image = ros::topic::waitForMessage<sensor_msgs::Image>("/camera/rgb/image_rect_color"); //returns a pointer to the message
-        CoffeMachineROSNode::copyImage(image);
-        pub_yolo_image_raw.publish(image);
-        cv_bridge::CvImagePtr image_in = cv_bridge::toCvCopy(image, image->encoding);//get image
-        
-        
-        auto yolo_msg = ros::topic::waitForMessage<darknet_ros_msgs::BoundingBoxes>("/darknet_ros/bounding_boxes");
-        darknet_ros_msgs::BoundingBox d_bb_cup = CoffeMachineROSNode::find_class(*yolo_msg,"cup");
-        darknet_ros_msgs::BoundingBox d_bb_coffeemaker = CoffeMachineROSNode::find_class(*yolo_msg,"coffeemaker");
-
-        if (d_bb_coffeemaker.probability>0.1)
+       status = global.AskForStatus("PlaceCoffeCup");
+        if (status == BT::NodeStatus::SUCCESS)
         {
-            if (d_bb_cup.probability>0.6)
-            {
-                    std::cout << "A cup is placed in the coffe machine" << std::endl;   
-                    CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_cup.xmin, d_bb_cup.ymin, d_bb_cup.xmax, d_bb_cup.ymax, d_bb_cup.id,image_in);     
-                    CoffeMachineROSNode::plotBoundingBoxesInImage(d_bb_coffeemaker.xmin, d_bb_coffeemaker.ymin, d_bb_coffeemaker.xmax, d_bb_coffeemaker.ymax, d_bb_coffeemaker.id,image_in);
-                    CoffeMachineROSNode::publishBBImage("5.Coffe_cup_is_placed.jpg",image_in);
-                    publishBTState("CoffeCupPlaced", "SUCCESS");
-                    return BT::NodeStatus::SUCCESS;
-            
-            }
-            else{
-                    publishBTState("CoffeCupPlaced", "FAILURE");
-                    return BT::NodeStatus::FAILURE;
-            }
+            publishBTState("PlaceCoffeCup", "SUCCESS");            
         }
-        else{
-            publishBTState("CoffeCupPlaced", "RUNNING");
-            return BT::NodeStatus::RUNNING;
+        else if (status == BT::NodeStatus::RUNNING)
+        {
+            publishBTState("PlaceCoffeCup", "RUNNING");            
+        }
 
-        }
+        else if (status == BT::NodeStatus::FAILURE)
+        {
+            publishBTState("PlaceCoffeCup", "FAILURE");            
+        }        
+        return status;
 
 
     }

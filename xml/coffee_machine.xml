@@ -83,7 +83,9 @@
             </Timeout>
             <Timeout msec="120000">
                 <Fallback name="arallel">
-                    <Condition ID="HasHumanAddedMilk"/>
+                    <Timeout msec="600000">
+                        <Condition ID="HasHumanAddedMilk"/>
+                    </Timeout>
                     <Fallback>
                         <Inverter>
                             <Condition ID="IsMilkDesired"/>
@@ -94,7 +96,9 @@
             </Timeout>
             <Timeout msec="120000">
                 <Fallback>
-                    <Condition ID="HasHumanAddedSugar"/>
+                    <Timeout msec="600000">
+                        <Condition ID="HasHumanAddedSugar"/>
+                    </Timeout>
                     <Fallback>
                         <Inverter>
                             <Condition ID="IsSugarDesired"/>
