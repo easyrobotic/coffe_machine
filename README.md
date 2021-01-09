@@ -13,7 +13,8 @@ Actions and conditions of this behavior are used to see if the human is handling
        - sugar
        - marro_tank
        - water_tank
-       In order to use this pretrained model with ROS, the package [darknet_ros](https://github.com/leggedrobotics/darknet_ros) has been used.
+
+    In order to use this pretrained model with ROS, the package [darknet_ros](https://github.com/leggedrobotics/darknet_ros) has been used.
  3. Once the human pose and object is detected, an algorithm has been developed in order to detect if the person is handling the object. 
 
  Bag files can be found in the three tests folder. It can be found in [rosbag_files](https://drive.google.com/drive/folders/15Y5ckfjOt-66Ck-eKTsaKYBuWFjE0j34?usp=sharing).
