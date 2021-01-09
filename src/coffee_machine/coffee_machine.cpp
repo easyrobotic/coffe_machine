@@ -165,7 +165,13 @@ namespace CoffeMachineNS
             cv_img_out.header.stamp = ros::Time::now();
             cv_img_out.header.frame_id = "camera";
             cv_img_out.encoding =  image->encoding;
-            std::string path_ = "/home/julia/tfm/src/coffee_machine/output_img/";   
+            std::string path_ ;
+
+            if (nh.getParam("/coffee_machine/output_img_dir", path_)){
+                std::cout << "output_img_dir path  ok" << std::endl;
+        
+            };
+            //std::string path_ = "/home/julia/tfm/src/coffee_machine/output_img/";   
             cv::imwrite(path_+image_name, cv_bridge::toCvShare(cv_img_out.toImageMsg(), "bgr8")->image) ;
             cv::imshow("image_output", cv_bridge::toCvShare(cv_img_out.toImageMsg(), "bgr8")->image);
             image_pub_bb_image_out.publish(cv_img_out.toImageMsg());

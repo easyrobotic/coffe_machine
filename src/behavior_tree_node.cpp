@@ -7,10 +7,10 @@ using namespace BT;
 
 static const char* xml_text;
 
-std::string path = "/home/julia/tfm/src/coffee_machine/xml/coffee_machine.xml";
+//std::string path = "/home/julia/tfm/src/coffee_machine/xml/coffee_machine.xml";
 //std::string path = "./../xml/coffe_machine.xml";
 //std::string path = "./coffe_machine_v2.xml";
-
+std::string path;
 Blackboard::Ptr blackboard=Blackboard::create();
 
 
@@ -36,6 +36,11 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
     //ros::Rate loop_rate(10);
     CoffeMachineROSNode coffe_machine_ros_node = CoffeMachineROSNode(&nh);
+
+     if (nh.getParam("/coffee_machine/xml_path", path)){
+         std::cout << "xml path param ok" << std::endl;
+        
+     };
 
 
     /******************************************************CONDITIONS***********************************************************************/

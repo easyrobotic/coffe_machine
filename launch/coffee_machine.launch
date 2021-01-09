@@ -1,9 +1,11 @@
 <launch>
   <!--node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" -->
-  <node name="coffee_machine" pkg="coffee_machine" type="behavior_tree_node" output="screen" />
-  <!--/node-->
+  <node name="coffee_machine" pkg="coffee_machine" type="behavior_tree_node" output="screen"  >
+    <param name="xml_path" value="$(find coffee_machine)/xml/coffee_machine.xml" />
+    <param name="output_img_dir" value="$(find coffee_machine)/output_img/" />
+  </node>
   <node name="raw_image" pkg="image_view" type="image_view" respawn="false" output="screen">
-    <remap from="image" to="/camera/rgb/image_rect_color"/>
+    <remap from="image" to="/camera/rgb/output_img/"/>
     <param name="autosize" value="true" />
   </node>
    <!--node name="output_image" pkg="image_view" type="image_view" respawn="false" output="screen">
